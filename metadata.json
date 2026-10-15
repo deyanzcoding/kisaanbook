@@ -1,0 +1,6 @@
+{
+  "name": "Kisaan Book",
+  "description": "Simple, farmer-focused social networking and agricultural community for Pakistan, featuring crop advice, marketplace, and peer discussions.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
