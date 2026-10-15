@@ -127,3 +127,14 @@ data class AgriArticle(
     val source: String,
     val readTime: String
 )
+
+data class FarmerStory(
+    val id: String,
+    val authorName: String,
+    val authorDistrict: String,
+    val avatarInitials: String,
+    val imageRes: Int,
+    val caption: String,
+    val timeAgo: String,
+    val isViewed: Boolean = false
+)

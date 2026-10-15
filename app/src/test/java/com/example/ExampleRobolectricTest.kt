@@ -32,9 +32,54 @@ class ExampleRobolectricTest {
     assertTrue(viewModel.posts.value.isNotEmpty())
     assertTrue(viewModel.questions.value.isNotEmpty())
     assertTrue(viewModel.listings.value.isNotEmpty())
+    assertTrue(viewModel.stories.value.isNotEmpty())
+    assertTrue(viewModel.mandiPrices.value.isNotEmpty())
 
     viewModel.setTab(AppTab.COMMUNITY)
     assertEquals(AppTab.COMMUNITY, viewModel.currentTab.value)
+  }
+
+  @Test
+  fun `stories and active story flow`() {
+    val viewModel = KisaanBhaiViewModel()
+    val firstStory = viewModel.stories.value.first()
+    assertNull(viewModel.activeStory.value)
+
+    viewModel.openStory(firstStory)
+    assertNotNull(viewModel.activeStory.value)
+    assertEquals(firstStory.id, viewModel.activeStory.value?.id)
+
+    viewModel.closeStory()
+    assertNull(viewModel.activeStory.value)
+  }
+
+  @Test
+  fun `update real location flow`() {
+    val viewModel = KisaanBhaiViewModel()
+    assertEquals("Mardan", viewModel.selectedDistrict.value)
+
+    viewModel.setDetectedLocation("Peshawar")
+    assertEquals("Peshawar", viewModel.selectedDistrict.value)
+    assertTrue(viewModel.currentUser.value.district.contains("Peshawar"))
+  }
+
+  @Test
+  fun `update mandi rates flow`() {
+    val viewModel = KisaanBhaiViewModel()
+    val initialCount = viewModel.mandiPrices.value.size
+
+    viewModel.updateOrAddMandiPrice(
+      cropName = "Canola Oilseed",
+      cropNameUrdu = "کینولا",
+      mandiLocation = "Faisalabad Mandi",
+      priceMin = 8500,
+      priceMax = 9200,
+      unit = "40 kg (Maund)"
+    )
+
+    val updatedItem = viewModel.mandiPrices.value.first { it.cropName == "Canola Oilseed" }
+    assertEquals(8500, updatedItem.priceMin)
+    assertEquals(9200, updatedItem.priceMax)
   }
 
   @Test

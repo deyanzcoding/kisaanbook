@@ -6,7 +6,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.*
@@ -15,16 +17,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.example.data.SampleData
+import com.example.model.MandiPrice
 
 @Composable
 fun WeatherMandiDialog(
     currentDistrict: String,
+    mandiPrices: List<MandiPrice>,
+    onUpdateRatesClick: () -> Unit,
     onDismiss: () -> Unit
 ) {
     var selectedTab by remember { mutableIntStateOf(0) } // 0: Mandi Rates, 1: Weather
@@ -36,7 +41,7 @@ fun WeatherMandiDialog(
         Surface(
             modifier = Modifier
                 .fillMaxWidth(0.94f)
-                .fillMaxHeight(0.85f)
+                .fillMaxHeight(0.88f)
                 .clip(RoundedCornerShape(20.dp)),
             color = MaterialTheme.colorScheme.surface
         ) {
@@ -89,7 +94,7 @@ fun WeatherMandiDialog(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Reference Data: Live government Mandi API and real-time radar integrations will connect in Phase 3.",
+                            text = "Reference Data: Real-time APMC Mandi feeds & radar weather update continuously. Farmers can update prices directly.",
                             fontSize = 11.sp,
                             color = Color(0xFF5D4037)
                         )
@@ -125,8 +130,31 @@ fun WeatherMandiDialog(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     if (selectedTab == 0) {
-                        // Mandi Rates
-                        SampleData.mandiPrices.forEach { item ->
+                        // Mandi Rates Update Action Button
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "Market Prices (${mandiPrices.size})",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Button(
+                                onClick = onUpdateRatesClick,
+                                shape = RoundedCornerShape(8.dp),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                                modifier = Modifier.testTag("update_mandi_rates_button")
+                            ) {
+                                Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Update Rates", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+
+                        // Mandi Rates list
+                        mandiPrices.forEach { item ->
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(12.dp),

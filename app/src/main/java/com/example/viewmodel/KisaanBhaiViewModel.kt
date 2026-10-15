@@ -38,11 +38,20 @@ class KisaanBhaiViewModel : ViewModel() {
     private val _posts = MutableStateFlow(SampleData.initialPosts)
     val posts: StateFlow<List<Post>> = _posts.asStateFlow()
 
+    private val _stories = MutableStateFlow(SampleData.initialStories)
+    val stories: StateFlow<List<FarmerStory>> = _stories.asStateFlow()
+
+    private val _activeStory = MutableStateFlow<FarmerStory?>(null)
+    val activeStory: StateFlow<FarmerStory?> = _activeStory.asStateFlow()
+
     private val _questions = MutableStateFlow(SampleData.initialQuestions)
     val questions: StateFlow<List<Question>> = _questions.asStateFlow()
 
     private val _listings = MutableStateFlow(SampleData.initialListings)
     val listings: StateFlow<List<MarketplaceListing>> = _listings.asStateFlow()
+
+    private val _mandiPrices = MutableStateFlow(SampleData.mandiPrices)
+    val mandiPrices: StateFlow<List<MandiPrice>> = _mandiPrices.asStateFlow()
 
     private val _notifications = MutableStateFlow(SampleData.initialNotifications)
     val notifications: StateFlow<List<NotificationItem>> = _notifications.asStateFlow()
@@ -52,6 +61,9 @@ class KisaanBhaiViewModel : ViewModel() {
 
     private val _selectedDistrict = MutableStateFlow("Mardan")
     val selectedDistrict: StateFlow<String> = _selectedDistrict.asStateFlow()
+
+    private val _isDetectingLocation = MutableStateFlow(false)
+    val isDetectingLocation: StateFlow<Boolean> = _isDetectingLocation.asStateFlow()
 
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
@@ -77,6 +89,9 @@ class KisaanBhaiViewModel : ViewModel() {
 
     private val _showWeatherMandiDialog = MutableStateFlow(false)
     val showWeatherMandiDialog: StateFlow<Boolean> = _showWeatherMandiDialog.asStateFlow()
+
+    private val _showUpdateMandiDialog = MutableStateFlow(false)
+    val showUpdateMandiDialog: StateFlow<Boolean> = _showUpdateMandiDialog.asStateFlow()
 
     private val _showAgriGuidesDialog = MutableStateFlow(false)
     val showAgriGuidesDialog: StateFlow<Boolean> = _showAgriGuidesDialog.asStateFlow()
@@ -105,6 +120,16 @@ class KisaanBhaiViewModel : ViewModel() {
         _selectedDistrict.value = district
     }
 
+    fun setDetectedLocation(locality: String) {
+        _selectedDistrict.value = locality
+        _currentUser.update { it.copy(district = "$locality, Pakistan") }
+        _isDetectingLocation.value = false
+    }
+
+    fun setDetectingLocation(detecting: Boolean) {
+        _isDetectingLocation.value = detecting
+    }
+
     fun setSearchQuery(query: String) {
         _searchQuery.value = query
     }
@@ -130,9 +155,30 @@ class KisaanBhaiViewModel : ViewModel() {
         }
     }
 
+    // Story Actions
+    fun openStory(story: FarmerStory) {
+        _activeStory.value = story
+    }
+
+    fun closeStory() {
+        _activeStory.value = null
+    }
+
+    fun addStory(imageRes: Int, caption: String) {
+        val newStory = FarmerStory(
+            id = "story_${System.currentTimeMillis()}",
+            authorName = _currentUser.value.name,
+            authorDistrict = _currentUser.value.district.split(",").firstOrNull()?.trim() ?: "Mardan",
+            avatarInitials = _currentUser.value.avatarInitials,
+            imageRes = imageRes,
+            caption = caption.ifBlank { "Live farm update from ${_currentUser.value.name}" },
+            timeAgo = "Just now"
+        )
+        _stories.update { listOf(newStory) + it }
+    }
+
     // Authentication Actions
     fun login(phone: String, pin: String) {
-        // Authenticate user with local state
         _currentUser.value = SampleData.currentUser.copy(
             district = if (_currentUser.value.district.isBlank()) "$_selectedDistrict, Pakistan" else _currentUser.value.district
         )
@@ -385,6 +431,39 @@ class KisaanBhaiViewModel : ViewModel() {
         _showCreateListingSheet.value = false
     }
 
+    // Mandi Price Actions
+    fun updateOrAddMandiPrice(
+        cropName: String,
+        cropNameUrdu: String,
+        mandiLocation: String,
+        priceMin: Int,
+        priceMax: Int,
+        unit: String
+    ) {
+        val existingIndex = _mandiPrices.value.indexOfFirst {
+            it.cropName.equals(cropName, ignoreCase = true) || it.cropNameUrdu.equals(cropNameUrdu, ignoreCase = true)
+        }
+
+        val updatedItem = MandiPrice(
+            cropName = cropName.trim(),
+            cropNameUrdu = cropNameUrdu.trim(),
+            mandiLocation = mandiLocation.trim(),
+            priceMin = priceMin,
+            priceMax = priceMax,
+            unit = unit.trim(),
+            dateUpdated = "Updated Today by Farmer"
+        )
+
+        _mandiPrices.update { current ->
+            if (existingIndex >= 0) {
+                current.toMutableList().apply { set(existingIndex, updatedItem) }
+            } else {
+                listOf(updatedItem) + current
+            }
+        }
+        _showUpdateMandiDialog.value = false
+    }
+
     // Notifications Actions
     fun markNotificationRead(id: String) {
         _notifications.update { list ->
@@ -449,6 +528,9 @@ class KisaanBhaiViewModel : ViewModel() {
 
     fun openWeatherMandi() { _showWeatherMandiDialog.value = true }
     fun closeWeatherMandi() { _showWeatherMandiDialog.value = false }
+
+    fun openUpdateMandiDialog() { _showUpdateMandiDialog.value = true }
+    fun closeUpdateMandiDialog() { _showUpdateMandiDialog.value = false }
 
     fun openAgriGuides() { _showAgriGuidesDialog.value = true }
     fun closeAgriGuides() { _showAgriGuidesDialog.value = false }

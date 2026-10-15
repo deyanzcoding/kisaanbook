@@ -439,4 +439,43 @@ object SampleData {
             readTime = "3 min read"
         )
     )
+
+    val initialStories = listOf(
+        FarmerStory(
+            id = "story_1",
+            authorName = "Dr. Tariq",
+            authorDistrict = "Faisalabad",
+            avatarInitials = "TM",
+            imageRes = R.drawable.img_wheat_field,
+            caption = "Wheat Rust Scouting: Check flag leaves early morning for yellow powder pustules.",
+            timeAgo = "1h ago"
+        ),
+        FarmerStory(
+            id = "story_2",
+            authorName = "Bilal Khan",
+            authorDistrict = "Swat",
+            avatarInitials = "BK",
+            imageRes = R.drawable.img_maize_harvest,
+            caption = "Alhamdulillah, 98 maunds per acre harvested from Pioneer 30Y87 hybrid plot!",
+            timeAgo = "3h ago"
+        ),
+        FarmerStory(
+            id = "story_3",
+            authorName = "Haji Sarwar",
+            authorDistrict = "Rahim Yar Khan",
+            avatarInitials = "GS",
+            imageRes = R.drawable.img_pakistan_tractor,
+            caption = "Laser leveling completed for 25 acres. Saving tubewell diesel and irrigation turns.",
+            timeAgo = "5h ago"
+        ),
+        FarmerStory(
+            id = "story_4",
+            authorName = "Agro Multan",
+            authorDistrict = "Multan",
+            avatarInitials = "AM",
+            imageRes = R.drawable.img_wheat_field,
+            caption = "New batch of certified imported DAP and zinc arrived at Multan Mandi gate.",
+            timeAgo = "7h ago"
+        )
+    )
 }

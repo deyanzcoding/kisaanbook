@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.R
 import com.example.data.SampleData
 import com.example.localization.Strings
 import com.example.ui.components.*
@@ -44,9 +45,13 @@ fun KisaanBhaiApp(
     val isLoggedIn by viewModel.isLoggedIn.collectAsStateWithLifecycle()
 
     val posts by viewModel.posts.collectAsStateWithLifecycle()
+    val stories by viewModel.stories.collectAsStateWithLifecycle()
+    val activeStory by viewModel.activeStory.collectAsStateWithLifecycle()
     val questions by viewModel.questions.collectAsStateWithLifecycle()
     val listings by viewModel.listings.collectAsStateWithLifecycle()
+    val mandiPrices by viewModel.mandiPrices.collectAsStateWithLifecycle()
     val notifications by viewModel.notifications.collectAsStateWithLifecycle()
+
     val selectedCategory by viewModel.selectedCategoryFilter.collectAsStateWithLifecycle()
     val selectedDistrict by viewModel.selectedDistrict.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
@@ -58,6 +63,7 @@ fun KisaanBhaiApp(
     val activeCommentsPost by viewModel.activeCommentsPost.collectAsStateWithLifecycle()
     val activeContactListing by viewModel.activeContactListing.collectAsStateWithLifecycle()
     val showWeatherMandiDialog by viewModel.showWeatherMandiDialog.collectAsStateWithLifecycle()
+    val showUpdateMandiDialog by viewModel.showUpdateMandiDialog.collectAsStateWithLifecycle()
     val showAgriGuidesDialog by viewModel.showAgriGuidesDialog.collectAsStateWithLifecycle()
     val showEditProfileDialog by viewModel.showEditProfileDialog.collectAsStateWithLifecycle()
     val showSettingsDialog by viewModel.showSettingsDialog.collectAsStateWithLifecycle()
@@ -82,7 +88,7 @@ fun KisaanBhaiApp(
                     containerColor = MaterialTheme.colorScheme.surface,
                     tonalElevation = 6.dp
                 ) {
-                    // Home
+                    // Home (Facebook style feed)
                     NavigationBarItem(
                         selected = currentTab == AppTab.HOME,
                         onClick = { viewModel.setTab(AppTab.HOME) },
@@ -101,7 +107,7 @@ fun KisaanBhaiApp(
                         modifier = Modifier.testTag("nav_home")
                     )
 
-                    // Community
+                    // Community (Q&A)
                     NavigationBarItem(
                         selected = currentTab == AppTab.COMMUNITY,
                         onClick = { viewModel.setTab(AppTab.COMMUNITY) },
@@ -214,6 +220,7 @@ fun KisaanBhaiApp(
                         AppTab.HOME -> {
                             HomeScreen(
                                 posts = posts,
+                                stories = stories,
                                 currentUser = currentUser,
                                 isLoggedIn = isLoggedIn,
                                 selectedCategory = selectedCategory,
@@ -223,26 +230,23 @@ fun KisaanBhaiApp(
                                 unreadNotifCount = unreadNotifCount,
                                 appLanguage = appLanguage,
                                 onCategorySelect = { viewModel.setCategoryFilter(it) },
-                                onDistrictChangeClick = { showDistrictPickerDialog = true },
+                                onDistrictChange = { viewModel.setDetectedLocation(it) },
                                 onSearchQueryChange = { viewModel.setSearchQuery(it) },
                                 onToggleSearch = { viewModel.toggleSearchActive(it) },
-                                onToggleLanguage = { viewModel.cycleLanguage() },
-                                onSettingsClick = { viewModel.openSettings() },
                                 onNotificationClick = { viewModel.setTab(AppTab.NOTIFICATIONS) },
                                 onAuthClick = { viewModel.openAuth(isLogin = true) },
                                 onLikeClick = { viewModel.toggleLike(it) },
                                 onCommentClick = { viewModel.openComments(it) },
                                 onSaveClick = { viewModel.toggleSave(it) },
-                                onShortcutClick = { type ->
-                                    when (type) {
-                                        "ASK" -> viewModel.setTab(AppTab.COMMUNITY)
-                                        "MANDI", "WEATHER" -> viewModel.openWeatherMandi()
-                                        "SUPPLIES", "MACHINERY" -> {
-                                            viewModel.setTab(AppTab.MARKETPLACE)
-                                        }
-                                        "ADVICE" -> viewModel.openAgriGuides()
-                                    }
-                                }
+                                onStoryClick = { viewModel.openStory(it) },
+                                onCreateStoryClick = {
+                                    viewModel.addStory(
+                                        imageRes = R.drawable.img_wheat_field,
+                                        caption = "Fresh farm update from ${currentUser.name} in $selectedDistrict!"
+                                    )
+                                },
+                                onOpenCreatePost = { viewModel.openCreatePostSheet() },
+                                onOpenAskQuestion = { viewModel.openCreateQuestionSheet() }
                             )
                         }
                         AppTab.COMMUNITY -> {
@@ -260,7 +264,9 @@ fun KisaanBhaiApp(
                             MarketplaceScreen(
                                 listings = listings,
                                 onCreateListingClick = { viewModel.openCreateListingSheet() },
-                                onContactSellerClick = { viewModel.openContactSeller(it) }
+                                onContactSellerClick = { viewModel.openContactSeller(it) },
+                                onOpenMandiRatesClick = { viewModel.openWeatherMandi() },
+                                onUpdateMandiRatesClick = { viewModel.openUpdateMandiDialog() }
                             )
                         }
                         AppTab.NOTIFICATIONS -> {
@@ -291,6 +297,14 @@ fun KisaanBhaiApp(
                     }
                 }
             }
+        }
+
+        // Story Viewer Modal
+        activeStory?.let { story ->
+            StoryViewerDialog(
+                story = story,
+                onDismiss = { viewModel.closeStory() }
+            )
         }
 
         // Modal Sheets and Dialogs
@@ -342,7 +356,23 @@ fun KisaanBhaiApp(
         if (showWeatherMandiDialog) {
             WeatherMandiDialog(
                 currentDistrict = selectedDistrict,
+                mandiPrices = mandiPrices,
+                onUpdateRatesClick = {
+                    viewModel.closeWeatherMandi()
+                    viewModel.openUpdateMandiDialog()
+                },
                 onDismiss = { viewModel.closeWeatherMandi() }
+            )
+        }
+
+        // Update / Add Mandi Rate Dialog
+        if (showUpdateMandiDialog) {
+            UpdateMandiRateDialog(
+                initialDistrict = selectedDistrict,
+                onDismiss = { viewModel.closeUpdateMandiDialog() },
+                onSaveRate = { crop, cropUrdu, mandi, min, max, unit ->
+                    viewModel.updateOrAddMandiPrice(crop, cropUrdu, mandi, min, max, unit)
+                }
             )
         }
 
