@@ -1,5 +1,6 @@
 package com.example.ui.components
 
+import android.content.Intent
 import android.widget.Toast
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
@@ -7,19 +8,21 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.outlined.BookmarkBorder
+import androidx.compose.material.icons.filled.Eco
+import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.filled.Storefront
+import androidx.compose.material.icons.filled.ThumbUp
+import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
-import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,21 +35,30 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import com.example.localization.AppLanguage
+import com.example.localization.Strings
 import com.example.model.Post
-import com.example.model.PostType
+import com.example.model.UserType
 
 @Composable
 fun PostCard(
     post: Post,
+    appLanguage: AppLanguage = AppLanguage.ENGLISH,
     onLikeClick: () -> Unit,
     onCommentClick: () -> Unit,
     onSaveClick: () -> Unit,
+    onFollowClick: () -> Unit = {},
+    onImageClick: () -> Unit = {},
+    onAuthorClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     var menuExpanded by remember { mutableStateOf(false) }
+    var isTextExpanded by remember { mutableStateOf(false) }
 
     val likeScale by animateFloatAsState(
         targetValue = if (post.isLiked) 1.25f else 1.0f,
@@ -54,65 +66,173 @@ fun PostCard(
         label = "likeScale"
     )
 
-    val likeColor by animateColorAsState(
-        targetValue = if (post.isLiked) Color(0xFFD32F2F) else MaterialTheme.colorScheme.onSurfaceVariant,
-        label = "likeColor"
-    )
+    val brandPrimary = MaterialTheme.colorScheme.primary
+
+    // Rule: if author name > 11 chars, truncate and show "..."
+    val authorRawName = post.author.name
+    val displayName = if (authorRawName.length > 11) {
+        "${authorRawName.take(11)}..."
+    } else {
+        authorRawName
+    }
 
     Card(
         modifier = modifier
             .fillMaxWidth()
             .testTag("post_card_${post.id}"),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            // Header: Author, Badge, District & Menu
+            // Header Row: [DP] [Stacked Meta-style Author Info] [MoreHoriz]
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 14.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Top
             ) {
-                // Avatar Initials Circle
+                // Profile DP with Meta-style story ring (Clickable to open profile)
                 Box(
                     modifier = Modifier
-                        .size(44.dp)
+                        .size(46.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer),
+                        .border(
+                            width = 2.dp,
+                            color = brandPrimary,
+                            shape = CircleShape
+                        )
+                        .padding(2.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer)
+                        .clickable { onAuthorClick() }
+                        .testTag("post_author_dp_${post.id}"),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = post.author.avatarInitials,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        fontSize = 15.sp
-                    )
+                    if (post.author.avatarUri != null) {
+                        AsyncImage(
+                            model = post.author.avatarUri,
+                            contentDescription = "Profile Photo",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        Text(
+                            text = post.author.avatarInitials,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            fontSize = 15.sp
+                        )
+                    }
                 }
 
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(10.dp))
 
-                Column(modifier = Modifier.weight(1f)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                // Up-to-down (Stacked) Meta-style author layout:
+                // Line 1: Name (truncated if > 11 chars) · Follow
+                // Line 2: User type badge (Kisaan, Zari-mahir, Dokandar)
+                // Line 3: District · Timestamp · Globe
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    // Line 1: Name · Follow
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         Text(
-                            text = post.author.name,
+                            text = displayName,
                             fontWeight = FontWeight.Bold,
                             fontSize = 15.sp,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier
+                                .clickable { onAuthorClick() }
+                                .testTag("post_author_name_${post.id}")
                         )
-                        if (post.author.isExpert) {
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Icon(
-                                imageVector = Icons.Default.CheckCircle,
-                                contentDescription = "Verified Expert",
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(16.dp)
-                            )
+
+                        Text(
+                            text = " · ",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        Text(
+                            text = if (post.author.isFollowing) "Following" else "Follow",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (post.author.isFollowing) MaterialTheme.colorScheme.onSurfaceVariant else brandPrimary,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(4.dp))
+                                .clickable {
+                                    onFollowClick()
+                                    val status = if (!post.author.isFollowing) {
+                                        "Following ${post.author.name}"
+                                    } else {
+                                        "Unfollowed ${post.author.name}"
+                                    }
+                                    Toast.makeText(context, status, Toast.LENGTH_SHORT).show()
+                                }
+                                .padding(horizontal = 4.dp, vertical = 2.dp)
+                                .testTag("follow_text_${post.id}")
+                        )
+                    }
+
+                    // Line 2: User type badge & label (kisaan, zari-mahir, dokandar)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        when (post.author.userType) {
+                            UserType.EXPERT -> {
+                                Icon(
+                                    imageVector = Icons.Default.Verified,
+                                    contentDescription = "Zari-Mahir",
+                                    tint = Color(0xFFD4AF37),
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Text(
+                                    text = "Zari-Mahir (زرعی ماہر)",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFFB8860B)
+                                )
+                            }
+                            UserType.DEALER -> {
+                                Icon(
+                                    imageVector = Icons.Default.Storefront,
+                                    contentDescription = "Dokandar",
+                                    tint = Color(0xFF1976D2),
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Text(
+                                    text = "Dokandar (دوکاندار)",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF1976D2)
+                                )
+                            }
+                            UserType.FARMER -> {
+                                Icon(
+                                    imageVector = Icons.Default.Eco,
+                                    contentDescription = "Kisaan",
+                                    tint = Color(0xFF2E7D32),
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Text(
+                                    text = "Kisaan (کسان)",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF2E7D32)
+                                )
+                            }
                         }
                     }
+
+                    // Line 3: District · Timestamp · Globe
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -120,12 +240,14 @@ fun PostCard(
                         Text(
                             text = post.district,
                             fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Medium
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                         Text(
-                            text = "•",
+                            text = "·",
                             fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
@@ -133,42 +255,29 @@ fun PostCard(
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                        Text(
+                            text = "·",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Icon(
+                            imageVector = Icons.Default.Public,
+                            contentDescription = "Public",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(12.dp)
+                        )
                     }
                 }
 
-                // Post Type Badge
-                Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = when (post.postType) {
-                        PostType.CROP_PROBLEM -> Color(0xFFFFEBEE)
-                        PostType.SUCCESS -> Color(0xFFE8F5E9)
-                        PostType.AGRI_NEWS -> Color(0xFFFFF8E1)
-                        else -> MaterialTheme.colorScheme.surfaceVariant
-                    },
-                    modifier = Modifier.padding(end = 4.dp)
-                ) {
-                    Text(
-                        text = post.postType.labelEn,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = when (post.postType) {
-                            PostType.CROP_PROBLEM -> Color(0xFFC62828)
-                            PostType.SUCCESS -> Color(0xFF2E7D32)
-                            PostType.AGRI_NEWS -> Color(0xFFE65100)
-                            else -> MaterialTheme.colorScheme.onSurfaceVariant
-                        },
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                    )
-                }
-
-                // Menu
+                // Options Menu (...)
                 Box {
                     IconButton(
                         onClick = { menuExpanded = true },
                         modifier = Modifier.size(36.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.MoreVert,
+                            imageVector = Icons.Default.MoreHoriz,
                             contentDescription = "Post Options",
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -178,177 +287,272 @@ fun PostCard(
                         onDismissRequest = { menuExpanded = false }
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Report Inappropriate Content") },
+                            text = { Text("View Profile") },
                             onClick = {
                                 menuExpanded = false
-                                Toast.makeText(context, "Thank you. Post submitted for community review.", Toast.LENGTH_SHORT).show()
+                                onAuthorClick()
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text("Share to WhatsApp") },
+                            text = { Text("Save Post") },
                             onClick = {
                                 menuExpanded = false
-                                Toast.makeText(context, "Post link prepared for sharing.", Toast.LENGTH_SHORT).show()
+                                onSaveClick()
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Report Post") },
+                            onClick = {
+                                menuExpanded = false
+                                Toast.makeText(context, "Post submitted for community review.", Toast.LENGTH_SHORT).show()
                             }
                         )
                     }
                 }
             }
 
-            // Text Description
-            Text(
-                text = post.text,
-                fontSize = 14.sp,
-                lineHeight = 21.sp,
-                color = MaterialTheme.colorScheme.onSurface,
+            // Post Description with Meta-style "Show more" / "Show less" toggle
+            // Click anywhere on description or "Show more" acts like show more / show less
+            val isLongText = post.text.length > 80
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 14.dp, vertical = 4.dp)
-            )
+                    .clickable { isTextExpanded = !isTextExpanded }
+                    .padding(horizontal = 14.dp, vertical = 2.dp)
+                    .testTag("post_description_${post.id}")
+            ) {
+                Text(
+                    text = post.text,
+                    fontSize = 14.sp,
+                    lineHeight = 22.sp,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = if (isTextExpanded) Int.MAX_VALUE else 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                if (isLongText) {
+                    Text(
+                        text = if (isTextExpanded) "Show less" else "Show more",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .padding(top = 2.dp)
+                            .testTag("show_more_toggle_${post.id}")
+                    )
+                }
+            }
 
-            // Crop Tag Chip
+            // Category tag pill
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 14.dp, vertical = 6.dp)
             ) {
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(6.dp),
                     color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
                 ) {
                     Text(
                         text = "#${post.category}",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = brandPrimary,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                     )
                 }
             }
 
-            // Image if present
-            if (post.imageRes != null) {
+            // Media Image
+            if (post.imageUri != null || post.imageRes != null) {
                 Spacer(modifier = Modifier.height(6.dp))
-                Image(
-                    painter = painterResource(id = post.imageRes),
-                    contentDescription = "Farm Post Photo",
-                    contentScale = ContentScale.Crop,
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(260.dp)
-                )
+                        .heightIn(min = 200.dp, max = 340.dp)
+                        .clickable { onImageClick() }
+                        .testTag("post_image_${post.id}")
+                ) {
+                    if (post.imageUri != null) {
+                        AsyncImage(
+                            model = post.imageUri,
+                            contentDescription = "Farm Post Photo",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else if (post.imageRes != null) {
+                        Image(
+                            painter = painterResource(id = post.imageRes),
+                            contentDescription = "Farm Post Photo",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
             }
 
-            // Actions Bar: Like, Comment, Share, Save
+            // Reaction & Engagement Summary Row (Facebook style)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(horizontal = 14.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Like Button
-                IconButton(
-                    onClick = onLikeClick,
-                    modifier = Modifier.testTag("like_button_${post.id}")
-                ) {
-                    Icon(
-                        imageVector = if (post.isLiked) Icons.Default.Favorite else Icons.Outlined.FavoriteBorder,
-                        contentDescription = "Like Post",
-                        tint = likeColor,
-                        modifier = Modifier.scale(likeScale)
-                    )
-                }
-                Text(
-                    text = "${post.likeCount}",
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-
-                Spacer(modifier = Modifier.width(16.dp))
-
-                // Comment Button
-                IconButton(
-                    onClick = onCommentClick,
-                    modifier = Modifier.testTag("comment_button_${post.id}")
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.ChatBubbleOutline,
-                        contentDescription = "Comments",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                Text(
-                    text = "${post.commentCount}",
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-
-                Spacer(modifier = Modifier.width(16.dp))
-
-                // Share Button
-                IconButton(
-                    onClick = {
-                        Toast.makeText(context, "Post link ready to share on WhatsApp!", Toast.LENGTH_SHORT).show()
+                // Like badge with count
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(18.dp)
+                            .clip(CircleShape)
+                            .background(brandPrimary),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.ThumbUp,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(11.dp)
+                        )
                     }
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Share,
-                        contentDescription = "Share",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "${post.likeCount}",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.Medium
                     )
                 }
 
-                Spacer(modifier = Modifier.weight(1f))
-
-                // Save/Bookmark Button
-                IconButton(
-                    onClick = onSaveClick,
-                    modifier = Modifier.testTag("save_button_${post.id}")
+                // Comments & Shares count
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(
-                        imageVector = if (post.isSaved) Icons.Default.Bookmark else Icons.Outlined.BookmarkBorder,
-                        contentDescription = "Save Post",
-                        tint = if (post.isSaved) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                    Text(
+                        text = "${post.commentCount} comments",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "·",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "Share",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
 
-            // Quick comment preview if comments exist
-            if (post.comments.isNotEmpty()) {
-                val latest = post.comments.first()
-                Column(
+            // Divider
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                thickness = 0.5.dp,
+                modifier = Modifier.padding(horizontal = 12.dp)
+            )
+
+            // Facebook 3-Action Bar: Like, Comment, Share
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(44.dp)
+                    .padding(horizontal = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Like Button
+                Row(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 14.dp, end = 14.dp, bottom = 12.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                        .clickable { onCommentClick() }
-                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(6.dp))
+                        .clickable { onLikeClick() }
+                        .testTag("like_button_${post.id}"),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = latest.authorName,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        if (latest.isExpert) {
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "• Expert",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
+                    Icon(
+                        imageVector = if (post.isLiked) Icons.Filled.ThumbUp else Icons.Outlined.ThumbUp,
+                        contentDescription = Strings.like(appLanguage),
+                        tint = if (post.isLiked) brandPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier
+                            .size(18.dp)
+                            .scale(likeScale)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = latest.text,
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 2
+                        text = Strings.like(appLanguage),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (post.isLiked) brandPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                // Comment Button
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(6.dp))
+                        .clickable { onCommentClick() }
+                        .testTag("comment_button_${post.id}"),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.ChatBubbleOutline,
+                        contentDescription = Strings.comment(appLanguage),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = Strings.comment(appLanguage),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                // Share Button with real Android Action Send intent to WhatsApp / Social
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(6.dp))
+                        .clickable {
+                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_SUBJECT, "Kisaan Book Post")
+                                putExtra(
+                                    Intent.EXTRA_TEXT,
+                                    "${post.author.name} (${post.author.userType.labelEn}) on Kisaan Book:\n\n${post.text}\n\nDistrict: ${post.district}"
+                                )
+                            }
+                            try {
+                                val chooser = Intent.createChooser(shareIntent, "Share post to WhatsApp / Social")
+                                context.startActivity(chooser)
+                            } catch (_: Exception) {
+                                Toast.makeText(context, "Sharing post to social media...", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                        .testTag("share_button_${post.id}"),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Share,
+                        contentDescription = Strings.share(appLanguage),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = Strings.share(appLanguage),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }

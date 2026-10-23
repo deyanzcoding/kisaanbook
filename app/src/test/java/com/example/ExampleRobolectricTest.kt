@@ -164,4 +164,47 @@ class ExampleRobolectricTest {
     assertEquals(initialCount + 1, viewModel.posts.value.size)
     assertEquals("Rice", viewModel.posts.value.first().category)
   }
+
+  @Test
+  fun `follow user toggles following state`() {
+    val viewModel = KisaanBhaiViewModel()
+    val firstAuthorId = viewModel.posts.value.first().author.id
+    val initialFollowState = viewModel.posts.value.first().author.isFollowing
+    viewModel.toggleFollow(firstAuthorId)
+    val updatedPost = viewModel.posts.value.first { it.author.id == firstAuthorId }
+    assertEquals(!initialFollowState, updatedPost.author.isFollowing)
+  }
+
+  @Test
+  fun `notification click marks read and opens fullscreen post`() {
+    val viewModel = KisaanBhaiViewModel()
+    val notifWithPost = viewModel.notifications.value.firstOrNull { it.targetPostId != null }
+    assertNotNull(notifWithPost)
+    viewModel.onNotificationClicked(notifWithPost!!)
+    val updatedNotif = viewModel.notifications.value.first { it.id == notifWithPost.id }
+    assertTrue(updatedNotif.isRead)
+    assertNotNull(viewModel.activeFullscreenPost.value)
+    assertEquals(notifWithPost.targetPostId, viewModel.activeFullscreenPost.value?.id)
+    viewModel.closeFullscreenPost()
+    assertNull(viewModel.activeFullscreenPost.value)
+  }
+
+  @Test
+  fun `profile update updates name bio crops and avatar`() {
+    val viewModel = KisaanBhaiViewModel()
+    viewModel.updateProfile(
+      name = "Sardar Khan",
+      district = "Nowshera",
+      cropsStr = "Sugarcane, Tobacco, Wheat",
+      bio = "Experienced progressive grower in KPK.",
+      avatarUri = "file:///data/user/0/avatar.jpg"
+    )
+    val user = viewModel.currentUser.value
+    assertEquals("Sardar Khan", user.name)
+    assertEquals("Nowshera", user.district)
+    assertEquals("Experienced progressive grower in KPK.", user.bio)
+    assertEquals("file:///data/user/0/avatar.jpg", user.avatarUri)
+    assertTrue(user.mainCrops.contains("Sugarcane"))
+  }
 }
+

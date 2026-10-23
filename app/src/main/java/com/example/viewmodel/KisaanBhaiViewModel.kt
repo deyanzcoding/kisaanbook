@@ -44,6 +44,12 @@ class KisaanBhaiViewModel : ViewModel() {
     private val _activeStory = MutableStateFlow<FarmerStory?>(null)
     val activeStory: StateFlow<FarmerStory?> = _activeStory.asStateFlow()
 
+    private val _activeStoryIndex = MutableStateFlow(0)
+    val activeStoryIndex: StateFlow<Int> = _activeStoryIndex.asStateFlow()
+
+    private val _activeFullscreenPost = MutableStateFlow<Post?>(null)
+    val activeFullscreenPost: StateFlow<Post?> = _activeFullscreenPost.asStateFlow()
+
     private val _questions = MutableStateFlow(SampleData.initialQuestions)
     val questions: StateFlow<List<Question>> = _questions.asStateFlow()
 
@@ -80,6 +86,9 @@ class KisaanBhaiViewModel : ViewModel() {
 
     private val _showCreateListingSheet = MutableStateFlow(false)
     val showCreateListingSheet: StateFlow<Boolean> = _showCreateListingSheet.asStateFlow()
+
+    private val _showCreateStoryDialog = MutableStateFlow(false)
+    val showCreateStoryDialog: StateFlow<Boolean> = _showCreateStoryDialog.asStateFlow()
 
     private val _activeCommentsPost = MutableStateFlow<Post?>(null)
     val activeCommentsPost: StateFlow<Post?> = _activeCommentsPost.asStateFlow()
@@ -157,24 +166,125 @@ class KisaanBhaiViewModel : ViewModel() {
 
     // Story Actions
     fun openStory(story: FarmerStory) {
+        val index = _stories.value.indexOfFirst { it.id == story.id }
+        _activeStoryIndex.value = if (index >= 0) index else 0
         _activeStory.value = story
+    }
+
+    fun nextStory() {
+        val currentIndex = _activeStoryIndex.value
+        if (currentIndex < _stories.value.lastIndex) {
+            val nextIndex = currentIndex + 1
+            _activeStoryIndex.value = nextIndex
+            _activeStory.value = _stories.value[nextIndex]
+        } else {
+            closeStory()
+        }
+    }
+
+    fun previousStory() {
+        val currentIndex = _activeStoryIndex.value
+        if (currentIndex > 0) {
+            val prevIndex = currentIndex - 1
+            _activeStoryIndex.value = prevIndex
+            _activeStory.value = _stories.value[prevIndex]
+        } else {
+            closeStory()
+        }
     }
 
     fun closeStory() {
         _activeStory.value = null
     }
 
-    fun addStory(imageRes: Int, caption: String) {
+    // Fullscreen Post Viewer
+    fun openFullscreenPost(post: Post) {
+        _activeFullscreenPost.value = post
+    }
+
+    fun closeFullscreenPost() {
+        _activeFullscreenPost.value = null
+    }
+
+    // Follow / Unfollow Author
+    fun toggleFollow(farmerId: String) {
+        _posts.update { list ->
+            list.map { post ->
+                if (post.author.id == farmerId) {
+                    val willFollow = !post.author.isFollowing
+                    val delta = if (willFollow) 1 else -1
+                    post.copy(
+                        author = post.author.copy(
+                            isFollowing = willFollow,
+                            followersCount = maxOf(0, post.author.followersCount + delta)
+                        )
+                    )
+                } else post
+            }
+        }
+    }
+
+    fun openCreateStory() { _showCreateStoryDialog.value = true }
+    fun closeCreateStory() { _showCreateStoryDialog.value = false }
+
+    fun addStory(
+        storyType: String = "PHOTO",
+        caption: String,
+        imageRes: Int = 0,
+        imageUri: String? = null,
+        bgColor: Long? = null
+    ) {
         val newStory = FarmerStory(
             id = "story_${System.currentTimeMillis()}",
             authorName = _currentUser.value.name,
             authorDistrict = _currentUser.value.district.split(",").firstOrNull()?.trim() ?: "Mardan",
             avatarInitials = _currentUser.value.avatarInitials,
             imageRes = imageRes,
+            imageUri = imageUri,
             caption = caption.ifBlank { "Live farm update from ${_currentUser.value.name}" },
-            timeAgo = "Just now"
+            timeAgo = "Just now",
+            storyType = storyType,
+            backgroundColor = bgColor,
+            viewers = listOf("Ahmad Ali", "Hussain Shah"),
+            likesCount = 0,
+            isLiked = false,
+            comments = emptyList()
         )
         _stories.update { listOf(newStory) + it }
+        _showCreateStoryDialog.value = false
+    }
+
+    fun likeStory(storyId: String) {
+        _stories.update { list ->
+            list.map { s ->
+                if (s.id == storyId) {
+                    val newLiked = !s.isLiked
+                    val newCount = if (newLiked) s.likesCount + 1 else maxOf(0, s.likesCount - 1)
+                    s.copy(isLiked = newLiked, likesCount = newCount)
+                } else s
+            }
+        }
+        _activeStory.value?.let { active ->
+            if (active.id == storyId) {
+                _activeStory.value = _stories.value.find { it.id == storyId }
+            }
+        }
+    }
+
+    fun addStoryComment(storyId: String, text: String) {
+        if (text.isBlank()) return
+        _stories.update { list ->
+            list.map { s ->
+                if (s.id == storyId) {
+                    s.copy(comments = s.comments + "${_currentUser.value.name}: $text")
+                } else s
+            }
+        }
+        _activeStory.value?.let { active ->
+            if (active.id == storyId) {
+                _activeStory.value = _stories.value.find { it.id == storyId }
+            }
+        }
     }
 
     // Authentication Actions
@@ -261,7 +371,8 @@ class KisaanBhaiViewModel : ViewModel() {
             authorDistrict = _currentUser.value.district.split(",").firstOrNull()?.trim() ?: "Mardan",
             text = text.trim(),
             timestamp = "Just now",
-            isExpert = false
+            isExpert = false,
+            authorType = _currentUser.value.userType
         )
 
         _posts.update { list ->
@@ -278,12 +389,82 @@ class KisaanBhaiViewModel : ViewModel() {
         _activeCommentsPost.value = _posts.value.find { it.id == postId }
     }
 
+    fun replyToComment(postId: String, commentId: String, text: String) {
+        if (text.isBlank()) return
+        val newReply = ReplyComment(
+            id = "reply_${System.currentTimeMillis()}",
+            authorName = _currentUser.value.name,
+            authorType = _currentUser.value.userType,
+            authorDistrict = _currentUser.value.district.split(",").firstOrNull()?.trim() ?: "Mardan",
+            text = text.trim(),
+            timestamp = "Just now",
+            isLiked = false,
+            likeCount = 0
+        )
+        _posts.update { list ->
+            list.map { post ->
+                if (post.id == postId) {
+                    val updated = post.comments.map { comment ->
+                        if (comment.id == commentId) {
+                            comment.copy(replies = comment.replies + newReply)
+                        } else comment
+                    }
+                    post.copy(comments = updated, commentCount = post.commentCount + 1)
+                } else post
+            }
+        }
+        _activeCommentsPost.value = _posts.value.find { it.id == postId }
+    }
+
+    fun likeComment(postId: String, commentId: String) {
+        _posts.update { list ->
+            list.map { post ->
+                if (post.id == postId) {
+                    val updated = post.comments.map { comment ->
+                        if (comment.id == commentId) {
+                            val newLiked = !comment.isLiked
+                            val newCount = if (newLiked) comment.likeCount + 1 else maxOf(0, comment.likeCount - 1)
+                            comment.copy(isLiked = newLiked, likeCount = newCount)
+                        } else comment
+                    }
+                    post.copy(comments = updated)
+                } else post
+            }
+        }
+        _activeCommentsPost.value = _posts.value.find { it.id == postId }
+    }
+
+    fun likeReply(postId: String, commentId: String, replyId: String) {
+        _posts.update { list ->
+            list.map { post ->
+                if (post.id == postId) {
+                    val updated = post.comments.map { comment ->
+                        if (comment.id == commentId) {
+                            val updatedReplies = comment.replies.map { reply ->
+                                if (reply.id == replyId) {
+                                    val newLiked = !reply.isLiked
+                                    val newCount = if (newLiked) reply.likeCount + 1 else maxOf(0, reply.likeCount - 1)
+                                    reply.copy(isLiked = newLiked, likeCount = newCount)
+                                } else reply
+                            }
+                            comment.copy(replies = updatedReplies)
+                        } else comment
+                    }
+                    post.copy(comments = updated)
+                } else post
+            }
+        }
+        _activeCommentsPost.value = _posts.value.find { it.id == postId }
+    }
+
     fun createPost(
         text: String,
         category: String,
         postType: PostType,
         district: String,
-        imageRes: Int?
+        imageRes: Int?,
+        imageUri: String? = null,
+        customPostType: String? = null
     ) {
         if (text.isBlank()) return
         if (!_isLoggedIn.value) {
@@ -296,8 +477,10 @@ class KisaanBhaiViewModel : ViewModel() {
             author = _currentUser.value,
             text = text.trim(),
             imageRes = imageRes,
+            imageUri = imageUri,
             category = category,
             postType = postType,
+            customPostType = customPostType,
             district = district,
             timestamp = "Just now",
             likeCount = 0,
@@ -475,15 +658,26 @@ class KisaanBhaiViewModel : ViewModel() {
         _notifications.update { list -> list.map { it.copy(isRead = true) } }
     }
 
+    fun onNotificationClicked(item: NotificationItem) {
+        markNotificationRead(item.id)
+        if (item.targetPostId != null) {
+            val target = _posts.value.find { it.id == item.targetPostId }
+            if (target != null) {
+                _activeFullscreenPost.value = target
+            }
+        }
+    }
+
     // Profile Actions
-    fun updateProfile(name: String, district: String, cropsStr: String, bio: String) {
+    fun updateProfile(name: String, district: String, cropsStr: String, bio: String, avatarUri: String? = null) {
         val crops = cropsStr.split(",").map { it.trim() }.filter { it.isNotEmpty() }
         _currentUser.update {
             it.copy(
                 name = name.trim(),
                 district = district.trim(),
                 mainCrops = crops.ifEmpty { listOf("Wheat", "Maize") },
-                bio = bio.trim()
+                bio = bio.trim(),
+                avatarUri = avatarUri ?: it.avatarUri
             )
         }
         _showEditProfileDialog.value = false

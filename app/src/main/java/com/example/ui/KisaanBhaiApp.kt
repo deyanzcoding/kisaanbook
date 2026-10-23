@@ -47,6 +47,7 @@ fun KisaanBhaiApp(
     val posts by viewModel.posts.collectAsStateWithLifecycle()
     val stories by viewModel.stories.collectAsStateWithLifecycle()
     val activeStory by viewModel.activeStory.collectAsStateWithLifecycle()
+    val activeFullscreenPost by viewModel.activeFullscreenPost.collectAsStateWithLifecycle()
     val questions by viewModel.questions.collectAsStateWithLifecycle()
     val listings by viewModel.listings.collectAsStateWithLifecycle()
     val mandiPrices by viewModel.mandiPrices.collectAsStateWithLifecycle()
@@ -60,10 +61,10 @@ fun KisaanBhaiApp(
     val showCreatePostSheet by viewModel.showCreatePostSheet.collectAsStateWithLifecycle()
     val showCreateQuestionSheet by viewModel.showCreateQuestionSheet.collectAsStateWithLifecycle()
     val showCreateListingSheet by viewModel.showCreateListingSheet.collectAsStateWithLifecycle()
+    val showCreateStoryDialog by viewModel.showCreateStoryDialog.collectAsStateWithLifecycle()
     val activeCommentsPost by viewModel.activeCommentsPost.collectAsStateWithLifecycle()
     val activeContactListing by viewModel.activeContactListing.collectAsStateWithLifecycle()
-    val showWeatherMandiDialog by viewModel.showWeatherMandiDialog.collectAsStateWithLifecycle()
-    val showUpdateMandiDialog by viewModel.showUpdateMandiDialog.collectAsStateWithLifecycle()
+
     val showAgriGuidesDialog by viewModel.showAgriGuidesDialog.collectAsStateWithLifecycle()
     val showEditProfileDialog by viewModel.showEditProfileDialog.collectAsStateWithLifecycle()
     val showSettingsDialog by viewModel.showSettingsDialog.collectAsStateWithLifecycle()
@@ -145,33 +146,6 @@ fun KisaanBhaiApp(
                         modifier = Modifier.testTag("nav_marketplace")
                     )
 
-                    // Notifications / Alerts
-                    NavigationBarItem(
-                        selected = currentTab == AppTab.NOTIFICATIONS,
-                        onClick = { viewModel.setTab(AppTab.NOTIFICATIONS) },
-                        icon = {
-                            BadgedBox(
-                                badge = {
-                                    if (unreadNotifCount > 0) {
-                                        Badge { Text("$unreadNotifCount") }
-                                    }
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = if (currentTab == AppTab.NOTIFICATIONS) Icons.Default.Notifications else Icons.Outlined.Notifications,
-                                    contentDescription = Strings.tabAlerts(appLanguage)
-                                )
-                            }
-                        },
-                        label = { Text(Strings.tabAlerts(appLanguage), fontSize = 11.sp, fontWeight = if (currentTab == AppTab.NOTIFICATIONS) FontWeight.Bold else FontWeight.Normal) },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = MaterialTheme.colorScheme.primary,
-                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                            indicatorColor = MaterialTheme.colorScheme.primaryContainer
-                        ),
-                        modifier = Modifier.testTag("nav_notifications")
-                    )
-
                     // Profile
                     NavigationBarItem(
                         selected = currentTab == AppTab.PROFILE,
@@ -239,14 +213,11 @@ fun KisaanBhaiApp(
                                 onCommentClick = { viewModel.openComments(it) },
                                 onSaveClick = { viewModel.toggleSave(it) },
                                 onStoryClick = { viewModel.openStory(it) },
-                                onCreateStoryClick = {
-                                    viewModel.addStory(
-                                        imageRes = R.drawable.img_wheat_field,
-                                        caption = "Fresh farm update from ${currentUser.name} in $selectedDistrict!"
-                                    )
-                                },
+                                onCreateStoryClick = { viewModel.openCreateStory() },
                                 onOpenCreatePost = { viewModel.openCreatePostSheet() },
-                                onOpenAskQuestion = { viewModel.openCreateQuestionSheet() }
+                                onOpenAskQuestion = { viewModel.openCreateQuestionSheet() },
+                                onFollowClick = { viewModel.toggleFollow(it) },
+                                onImageClick = { viewModel.openFullscreenPost(it) }
                             )
                         }
                         AppTab.COMMUNITY -> {
@@ -264,15 +235,14 @@ fun KisaanBhaiApp(
                             MarketplaceScreen(
                                 listings = listings,
                                 onCreateListingClick = { viewModel.openCreateListingSheet() },
-                                onContactSellerClick = { viewModel.openContactSeller(it) },
-                                onOpenMandiRatesClick = { viewModel.openWeatherMandi() },
-                                onUpdateMandiRatesClick = { viewModel.openUpdateMandiDialog() }
+                                onContactSellerClick = { viewModel.openContactSeller(it) }
                             )
                         }
                         AppTab.NOTIFICATIONS -> {
                             NotificationsScreen(
                                 notifications = notifications,
-                                onMarkAsRead = { viewModel.markNotificationRead(it) },
+                                onBackClick = { viewModel.setTab(AppTab.HOME) },
+                                onNotificationClick = { viewModel.onNotificationClicked(it) },
                                 onMarkAllRead = { viewModel.markAllNotificationsRead() }
                             )
                         }
@@ -291,7 +261,9 @@ fun KisaanBhaiApp(
                                 onLikeClick = { viewModel.toggleLike(it) },
                                 onCommentClick = { viewModel.openComments(it) },
                                 onSaveClick = { viewModel.toggleSave(it) },
-                                onDeletePost = { viewModel.deletePost(it) }
+                                onDeletePost = { viewModel.deletePost(it) },
+                                onFollowClick = { viewModel.toggleFollow(it) },
+                                onImageClick = { viewModel.openFullscreenPost(it) }
                             )
                         }
                     }
@@ -299,11 +271,36 @@ fun KisaanBhaiApp(
             }
         }
 
-        // Story Viewer Modal
+        // Story Viewer Modal (Zoomable, viewers sheet, like & reply)
         activeStory?.let { story ->
             StoryViewerDialog(
-                story = story,
-                onDismiss = { viewModel.closeStory() }
+                stories = stories,
+                initialStory = story,
+                onDismiss = { viewModel.closeStory() },
+                onLikeStory = { viewModel.likeStory(it) },
+                onCommentStory = { id, text -> viewModel.addStoryComment(id, text) }
+            )
+        }
+
+        // Create Story Dialog (Picture, Video, Text)
+        if (showCreateStoryDialog) {
+            CreateStoryDialog(
+                currentUser = currentUser,
+                onDismiss = { viewModel.closeCreateStory() },
+                onPostStory = { type, caption, res, uri, bg ->
+                    viewModel.addStory(type, caption, res, uri, bg)
+                }
+            )
+        }
+
+        // Fullscreen Post Viewer Modal (Facebook style)
+        activeFullscreenPost?.let { post ->
+            FullscreenPostViewer(
+                post = post,
+                onDismiss = { viewModel.closeFullscreenPost() },
+                onLikeClick = { viewModel.toggleLike(post.id) },
+                onCommentClick = { viewModel.openComments(post) },
+                onFollowClick = { viewModel.toggleFollow(it) }
             )
         }
 
@@ -312,8 +309,8 @@ fun KisaanBhaiApp(
             CreatePostDialog(
                 userDistrict = currentUser.district,
                 onDismiss = { viewModel.closeCreatePostSheet() },
-                onPublish = { text, category, postType, district, imageRes ->
-                    viewModel.createPost(text, category, postType, district, imageRes)
+                onPublish = { text, category, postType, district, imageRes, imageUri, customType ->
+                    viewModel.createPost(text, category, postType, district, imageRes, imageUri, customType)
                 }
             )
         }
@@ -342,7 +339,10 @@ fun KisaanBhaiApp(
             CommentsBottomSheet(
                 post = post,
                 onDismiss = { viewModel.closeComments() },
-                onAddComment = { text -> viewModel.addComment(post.id, text) }
+                onAddComment = { text -> viewModel.addComment(post.id, text) },
+                onReplyToComment = { commentId, replyText -> viewModel.replyToComment(post.id, commentId, replyText) },
+                onLikeComment = { commentId -> viewModel.likeComment(post.id, commentId) },
+                onLikeReply = { commentId, replyId -> viewModel.likeReply(post.id, commentId, replyId) }
             )
         }
 
@@ -353,28 +353,7 @@ fun KisaanBhaiApp(
             )
         }
 
-        if (showWeatherMandiDialog) {
-            WeatherMandiDialog(
-                currentDistrict = selectedDistrict,
-                mandiPrices = mandiPrices,
-                onUpdateRatesClick = {
-                    viewModel.closeWeatherMandi()
-                    viewModel.openUpdateMandiDialog()
-                },
-                onDismiss = { viewModel.closeWeatherMandi() }
-            )
-        }
 
-        // Update / Add Mandi Rate Dialog
-        if (showUpdateMandiDialog) {
-            UpdateMandiRateDialog(
-                initialDistrict = selectedDistrict,
-                onDismiss = { viewModel.closeUpdateMandiDialog() },
-                onSaveRate = { crop, cropUrdu, mandi, min, max, unit ->
-                    viewModel.updateOrAddMandiPrice(crop, cropUrdu, mandi, min, max, unit)
-                }
-            )
-        }
 
         if (showAgriGuidesDialog) {
             AgriGuidesDialog(
@@ -386,8 +365,8 @@ fun KisaanBhaiApp(
             EditProfileDialog(
                 farmer = currentUser,
                 onDismiss = { viewModel.closeEditProfile() },
-                onSave = { name, dist, crops, bio ->
-                    viewModel.updateProfile(name, dist, crops, bio)
+                onSave = { name, dist, crops, bio, avatarUri ->
+                    viewModel.updateProfile(name, dist, crops, bio, avatarUri)
                 }
             )
         }

@@ -5,373 +5,685 @@ import com.example.model.*
 
 object SampleData {
 
+    // Current logged-in user
     val currentUser = Farmer(
-        id = "user_me",
-        name = "Rashid Ali",
-        username = "rashid_mardan",
+        id = "farmer_khursheed",
+        name = "Khursheed Ahmad",
+        username = "khursheed_mardan",
         district = "Mardan, Khyber Pakhtunkhwa",
         mainCrops = listOf("Wheat", "Maize", "Sugarcane"),
-        experienceYears = 8,
-        bio = "Passionate multigenerational farmer from Mardan. Sharing field lessons on grain cultivation and organic soil enriching.",
+        experienceYears = 12,
+        bio = "مردان سے گندم اور کماد کے پرانے کاشتکار۔ زمین کی قدرتی زرخیزی اور بہتر فصل کے طریقے اپنانے کے حامی۔",
         isExpert = false,
+        userType = UserType.FARMER,
         isFollowing = false,
-        followersCount = 184,
-        followingCount = 62,
-        postsCount = 14
+        followersCount = 384,
+        followingCount = 92,
+        postsCount = 18
     )
 
-    val expertDrTariq = Farmer(
-        id = "expert_tariq",
-        name = "Dr. Tariq Mahmood",
-        username = "drtariq_agri",
+    // Requested Farmers
+    val farmerHussainShah = Farmer(
+        id = "farmer_hussain",
+        name = "Hussain Shah",
+        username = "hussain_swat",
+        district = "Swat, Khyber Pakhtunkhwa",
+        mainCrops = listOf("Maize", "Apples", "Peaches"),
+        experienceYears = 10,
+        bio = "سوات وادی کے باغات اور ہائبرڈ مکئی کے کسان۔ آبپاشی کے جدید طریقوں کے تجربات۔",
+        isExpert = false,
+        userType = UserType.FARMER,
+        isFollowing = true,
+        followersCount = 520,
+        followingCount = 110,
+        postsCount = 24
+    )
+
+    val farmerHestaRahman = Farmer(
+        id = "farmer_hesta",
+        name = "Hesta Rahman",
+        username = "hesta_charsadda",
+        district = "Charsadda, Khyber Pakhtunkhwa",
+        mainCrops = listOf("Sugarcane", "Wheat", "Vegetables"),
+        experienceYears = 8,
+        bio = "چارسدہ میں کماد اور گڑ کی خالص تیاری۔ زمین کی تیاری میں دیسی کھاد کا باقاعدہ استعمال۔",
+        isExpert = false,
+        userType = UserType.FARMER,
+        isFollowing = true,
+        followersCount = 290,
+        followingCount = 74,
+        postsCount = 15
+    )
+
+    val farmerRasoolKhan = Farmer(
+        id = "farmer_rasool",
+        name = "Rasool Khan",
+        username = "rasool_swabi",
+        district = "Swabi, Khyber Pakhtunkhwa",
+        mainCrops = listOf("Tobacco", "Wheat", "Maize"),
+        experienceYears = 15,
+        bio = "صوابی سے تمباکو اور گندم کے کامیاب کاشتکار۔ زرعی رہنمائی اور محنت پر یقین۔",
+        isExpert = false,
+        userType = UserType.FARMER,
+        isFollowing = false,
+        followersCount = 410,
+        followingCount = 88,
+        postsCount = 29
+    )
+
+    val farmerAmirBadshah = Farmer(
+        id = "farmer_amir",
+        name = "Amir Badshah",
+        username = "amir_peshawar",
+        district = "Peshawar, Khyber Pakhtunkhwa",
+        mainCrops = listOf("Vegetables", "Wheat"),
+        experienceYears = 7,
+        bio = "پشاور میں سبزیوں کی پنیری اور گندم کی جدید کاشت۔",
+        isExpert = false,
+        userType = UserType.FARMER,
+        isFollowing = false,
+        followersCount = 180,
+        followingCount = 45,
+        postsCount = 9
+    )
+
+    val farmerJahangirKhan = Farmer(
+        id = "farmer_jahangir",
+        name = "Jahangir Khan",
+        username = "jahangir_nowshera",
+        district = "Nowshera, Khyber Pakhtunkhwa",
+        mainCrops = listOf("Citrus", "Wheat", "Maize"),
+        experienceYears = 14,
+        bio = "نوشہرہ کے باغات اور اجناس کے کاشتکار۔ پانی کی کمی کے تدراک کے طریقے پر کام۔",
+        isExpert = false,
+        userType = UserType.FARMER,
+        isFollowing = false,
+        followersCount = 330,
+        followingCount = 65,
+        postsCount = 17
+    )
+
+    // Requested Zari-Mahir (Agricultural Experts)
+    val expertAhmadAli = Farmer(
+        id = "expert_ahmad",
+        name = "Ahmad Ali",
+        username = "ahmad_agri_expert",
         district = "Faisalabad, Punjab",
-        mainCrops = listOf("Soil Science", "Crop Protection"),
-        experienceYears = 16,
-        bio = "Agricultural Scientist & Crop Protection Advisor. Helping Pakistani farmers with science-backed solutions.",
+        mainCrops = listOf("Agronomy", "Crop Protection"),
+        experienceYears = 18,
+        bio = "زرعی یونیورسٹی فیصل آباد کے محقق اور شعبہ فصلات کے مشیر۔ کسان بھائیوں کو سائنسی بنیادوں پر مفت مشورے۔",
         isExpert = true,
+        userType = UserType.EXPERT,
+        isFollowing = true,
+        followersCount = 1680,
+        followingCount = 120,
+        postsCount = 95
+    )
+
+    val expertShafiqHussain = Farmer(
+        id = "expert_shafiq",
+        name = "Shafiq Hussain",
+        username = "shafiq_plant_doc",
+        district = "Multan, Punjab",
+        mainCrops = listOf("Cotton", "Mangoes", "Soil Science"),
+        experienceYears = 16,
+        bio = "پودوں کی بیماریوں اور کیڑوں کے سدباب کے اسپیشلسٹ۔ ملتان و جنوبی پنجاب کے زرعی ماہر۔",
+        isExpert = true,
+        userType = UserType.EXPERT,
         isFollowing = true,
         followersCount = 1420,
-        followingCount = 110,
-        postsCount = 88
+        followingCount = 95,
+        postsCount = 82
     )
 
-    val farmerHajiSarwar = Farmer(
-        id = "farmer_sarwar",
-        name = "Haji Ghulam Sarwar",
-        username = "sarwar_ryk",
-        district = "Rahim Yar Khan, Punjab",
-        mainCrops = listOf("Wheat", "Cotton", "Mangoes"),
-        experienceYears = 22,
-        bio = "Commercial farmer in Southern Punjab. Advocate for water conservation and certified seeds.",
-        isExpert = false,
-        isFollowing = true,
-        followersCount = 540,
-        followingCount = 130,
-        postsCount = 35
-    )
-
-    val farmerBilal = Farmer(
-        id = "farmer_bilal",
-        name = "Bilal Khan",
-        username = "bilal_swat_agro",
-        district = "Swat, Khyber Pakhtunkhwa",
-        mainCrops = listOf("Maize", "Apples", "Peaches", "Vegetables"),
-        experienceYears = 6,
-        bio = "High-altitude orchards and hybrid maize farmer. Experimenting with terrace irrigation in Swat Valley.",
-        isExpert = false,
+    val expertFarmanKhan = Farmer(
+        id = "expert_farman",
+        name = "Farman Khan",
+        username = "farman_agri_kp",
+        district = "Peshawar, Khyber Pakhtunkhwa",
+        mainCrops = listOf("Horticulture", "Wheat Research"),
+        experienceYears = 12,
+        bio = "خیبر پختونخوا میں گندم کی اقسام اور باغبانی کے سینئر زرعی افسر۔",
+        isExpert = true,
+        userType = UserType.EXPERT,
         isFollowing = false,
-        followersCount = 310,
-        followingCount = 89,
-        postsCount = 21
+        followersCount = 980,
+        followingCount = 80,
+        postsCount = 64
     )
 
+    val expertMubasirKhan = Farmer(
+        id = "expert_mubasir",
+        name = "Mubasir Khan",
+        username = "mubasir_soil_lab",
+        district = "Lahore, Punjab",
+        mainCrops = listOf("Soil Fertility", "Fertilizer Management"),
+        experienceYears = 14,
+        bio = "زمین کے نمونوں کا تجزیہ اور متوازن کھادوں کے استعمال کے مشیر۔",
+        isExpert = true,
+        userType = UserType.EXPERT,
+        isFollowing = false,
+        followersCount = 1120,
+        followingCount = 105,
+        postsCount = 71
+    )
+
+    val expertZahidHussain = Farmer(
+        id = "expert_zahid",
+        name = "Zahid Hussain",
+        username = "zahid_water_mgt",
+        district = "Rawalpindi, Punjab",
+        mainCrops = listOf("Drip Irrigation", "Barani Agriculture"),
+        experienceYears = 15,
+        bio = "بارانی علاقوں میں پانی کا بچاؤ اور ڈرپ اریگیشن کے ماہر انجینئر۔",
+        isExpert = true,
+        userType = UserType.EXPERT,
+        isFollowing = false,
+        followersCount = 890,
+        followingCount = 76,
+        postsCount = 53
+    )
+
+    // Requested Dokandar (Dealers / Agri Input Suppliers)
+    val dealerHasnainRaza = Farmer(
+        id = "dealer_hasnain",
+        name = "Hasnain Raza",
+        username = "hasnain_agri_center",
+        district = "Gujranwala, Punjab",
+        mainCrops = listOf("Seeds", "Fertilizers", "Pesticides"),
+        experienceYears = 11,
+        bio = "رضا زرعی سروسز گوجرانوالہ۔ تمام کمپنیوں کے تصدیق شدہ بیج اور اعلیٰ معیار کی کھادیں ہول سیل ریٹ پر دستیاب ہیں۔",
+        isExpert = false,
+        userType = UserType.DEALER,
+        isFollowing = false,
+        followersCount = 640,
+        followingCount = 55,
+        postsCount = 42
+    )
+
+    val dealerSajidAli = Farmer(
+        id = "dealer_sajid",
+        name = "Sajid Ali",
+        username = "sajid_kisan_dokan",
+        district = "Sargodha, Punjab",
+        mainCrops = listOf("Citrus Spray", "Fertilizers"),
+        experienceYears = 9,
+        bio = "سرگودھا کسان مارکیٹ۔ کنو کے باغات کے خصوصی سپرے اور این پی کے کھادیں۔",
+        isExpert = false,
+        userType = UserType.DEALER,
+        isFollowing = false,
+        followersCount = 480,
+        followingCount = 40,
+        postsCount = 33
+    )
+
+    val dealerShafiqAhmad = Farmer(
+        id = "dealer_shafiq",
+        name = "Shafiq Ahmad",
+        username = "shafiq_seed_store",
+        district = "Mardan, Khyber Pakhtunkhwa",
+        mainCrops = listOf("Certified Seed", "Spray Pumps"),
+        experienceYears = 13,
+        bio = "مردان بازار بیج کارپوریشن۔ گندم، مکئی اور سبزیوں کے منظور شدہ بیج۔",
+        isExpert = false,
+        userType = UserType.DEALER,
+        isFollowing = false,
+        followersCount = 510,
+        followingCount = 62,
+        postsCount = 38
+    )
+
+    val dealerGulzarAhmad = Farmer(
+        id = "dealer_gulzar",
+        name = "Gulzar Ahmad",
+        username = "gulzar_chemicals",
+        district = "Sahiwal, Punjab",
+        mainCrops = listOf("Fungicides", "Weedicides"),
+        experienceYears = 15,
+        bio = "گلزار زرعی کیمیکلز ساہیوال۔ جڑی بوٹی مار اور پھپھوندی کش مستند ادویات۔",
+        isExpert = false,
+        userType = UserType.DEALER,
+        isFollowing = false,
+        followersCount = 590,
+        followingCount = 48,
+        postsCount = 45
+    )
+
+    val dealerImamAhmad = Farmer(
+        id = "dealer_imam",
+        name = "Imam Ahmad",
+        username = "imam_agri_bahawalpur",
+        district = "Bahawalpur, Punjab",
+        mainCrops = listOf("Cotton Inputs", "Foliar Sprays"),
+        experienceYears = 10,
+        bio = "امام زرعی مرکز بہاولپور۔ کپاس اور سرسوں کی نگہداشت کی ادویات۔",
+        isExpert = false,
+        userType = UserType.DEALER,
+        isFollowing = false,
+        followersCount = 430,
+        followingCount = 37,
+        postsCount = 26
+    )
+
+    val dealerBashirAhmad = Farmer(
+        id = "dealer_bashir",
+        name = "Bashir Ahmad",
+        username = "bashir_ryk_traders",
+        district = "Rahim Yar Khan, Punjab",
+        mainCrops = listOf("Urea", "DAP", "Potash"),
+        experienceYears = 20,
+        bio = "بشیر ٹریڈرز رحیم یار خان۔ سرکاری نرخوں پر کھاد کی ترسیل۔",
+        isExpert = false,
+        userType = UserType.DEALER,
+        isFollowing = false,
+        followersCount = 720,
+        followingCount = 50,
+        postsCount = 49
+    )
+
+    val dealerTariqAji = Farmer(
+        id = "dealer_tariq",
+        name = "Tariq Aji",
+        username = "tariq_machinery",
+        district = "Sheikhupura, Punjab",
+        mainCrops = listOf("Rotavator", "Seed Drills", "Laser Leveler"),
+        experienceYears = 14,
+        bio = "طارق زرعی آلات شیخوپورہ۔ روٹاویٹر، بیج ڈرل اور لیزر لیولر کرایہ اور فروخت کے لیے۔",
+        isExpert = false,
+        userType = UserType.DEALER,
+        isFollowing = false,
+        followersCount = 610,
+        followingCount = 44,
+        postsCount = 37
+    )
+
+    val dealerMuhammadAlam = Farmer(
+        id = "dealer_alam",
+        name = "Muhammad Alam",
+        username = "alam_sukkur_traders",
+        district = "Sukkur, Sindh",
+        mainCrops = listOf("Rice Seeds", "Zinc", "Pesticides"),
+        experienceYears = 16,
+        bio = "عالم زرعی کارپوریشن سکھر۔ سندھ کے کسانوں کے لیے چاول کے بیج اور زنک۔",
+        isExpert = false,
+        userType = UserType.DEALER,
+        isFollowing = false,
+        followersCount = 540,
+        followingCount = 39,
+        postsCount = 31
+    )
+
+    val allFarmersList: List<Farmer> = listOf(
+        currentUser,
+        farmerHussainShah,
+        farmerHestaRahman,
+        farmerRasoolKhan,
+        farmerAmirBadshah,
+        farmerJahangirKhan,
+        expertAhmadAli,
+        expertShafiqHussain,
+        expertFarmanKhan,
+        expertMubasirKhan,
+        expertZahidHussain,
+        dealerHasnainRaza,
+        dealerSajidAli,
+        dealerShafiqAhmad,
+        dealerGulzarAhmad,
+        dealerImamAhmad,
+        dealerBashirAhmad,
+        dealerTariqAji,
+        dealerMuhammadAlam
+    )
+
+    // Demo Posts with STRICT Urdu descriptions
     val initialPosts = listOf(
         Post(
             id = "post_1",
             author = currentUser,
-            text = "Assalam-o-Alaikum brothers! My wheat crop is showing yellowing and minor powdery rust patches on lower leaves after recent damp morning fog. Has anyone in KP experienced this this week? What fungicide or irrigation adjustment should I check?",
+            text = "السلام علیکم کسان بھائیو! حالیہ صبح کی شدید دھند اور نم موسم کے باعث میری گندم کی فصل کے نچلے پتوں پر زردی اور ہلکے سفوفی دھبے نظر آ رہے ہیں۔ کیا خیبر پختونخوا کے دیگر علاقوں میں بھی یہ مسئلہ درپیش ہے؟ بروقت بچاؤ کے لیے کون سا فنجی سائیڈ سپرے یا پانی کا شیڈول مفید رہے گا؟ رہنمائی فرمائیں۔",
             imageRes = R.drawable.img_wheat_field,
             category = "Wheat",
             postType = PostType.CROP_PROBLEM,
             district = "Mardan",
-            timestamp = "2 hours ago",
-            likeCount = 34,
-            commentCount = 6,
+            timestamp = "2h",
+            likeCount = 42,
+            commentCount = 5,
             isLiked = false,
             isSaved = false,
             comments = listOf(
                 Comment(
                     id = "c_1",
-                    authorName = "Dr. Tariq Mahmood",
+                    authorName = "Ahmad Ali",
                     authorDistrict = "Faisalabad",
-                    text = "Walaykum Assalam Rashid Bhai. Look closely at the leaf underside. If you see linear yellow stripe stripes, it's yellow rust. Avoid overhead sprinkling and apply Propiconazole or Tebuconazole if 5% leaves are affected.",
-                    timestamp = "1 hour ago",
-                    isExpert = true
+                    authorType = UserType.EXPERT,
+                    text = "وعلیکم السلام خورشید بھائی! پتے کے نچلے حصے پر اگر لمبائی کے رخ زرد لکیریں ہیں تو یہ زرد زنگ (Yellow Rust) ہو سکتا ہے۔ فوری طور پر نائٹروجنی کھاد کا زیادہ استعمال روکیں اور محکمہ زراعت سے تصدیق شدہ فنجی سائیڈ سپرے کریں۔",
+                    timestamp = "1h",
+                    isExpert = true,
+                    isLiked = true,
+                    likeCount = 12,
+                    replies = listOf(
+                        ReplyComment(
+                            id = "r_1_1",
+                            authorName = "Khursheed Ahmad",
+                            authorDistrict = "Mardan",
+                            authorType = UserType.FARMER,
+                            text = "بہت شکریہ احمد علی صاحب! کیا سپرے کے بعد فوری پانی لگانا مناسب ہوگا یا دو دن کا وقفہ دینا چاہیے؟",
+                            timestamp = "45m",
+                            isLiked = false,
+                            likeCount = 3
+                        ),
+                        ReplyComment(
+                            id = "r_1_2",
+                            authorName = "Ahmad Ali",
+                            authorDistrict = "Faisalabad",
+                            authorType = UserType.EXPERT,
+                            text = "سپرے کے کم از کم 48 گھنٹے بعد ہلکا پانی دیں تاکہ دوا پتوں پر اچھی طرح اثر کر سکے اور دھوپ میں جذب ہو جائے۔",
+                            timestamp = "30m",
+                            isLiked = true,
+                            likeCount = 8
+                        )
+                    )
                 ),
                 Comment(
                     id = "c_2",
-                    authorName = "Haji Ghulam Sarwar",
-                    authorDistrict = "Rahim Yar Khan",
-                    text = "Ensure you don't over-water with cold canal water right now; excess moisture in cold weather speeds up fungus.",
-                    timestamp = "45 mins ago",
-                    isExpert = false
+                    authorName = "Shafiq Ahmad",
+                    authorDistrict = "Mardan",
+                    authorType = UserType.DEALER,
+                    text = "مردان کچہری روڈ پر ہماری دکان پر این پی کے اور فنجی سائیڈ کا فریش اسٹاک موجود ہے، اگر ضرورت ہو تو وزٹ فرمائیں۔",
+                    timestamp = "35m",
+                    isExpert = false,
+                    isLiked = false,
+                    likeCount = 2,
+                    replies = emptyList()
                 )
             )
         ),
         Post(
             id = "post_2",
-            author = farmerBilal,
-            text = "Alhamdulillah! My hybrid maize crop has reached peak maturity with uniform cobs and zero borer infestation this season. Timely trichogramma cards and balanced potassium made a huge difference. Sharing blessings with fellow kisaan!",
+            author = farmerHussainShah,
+            text = "الحمد للہ! اس سیزن میں ہائبرڈ مکئی کی فصل بہترین تیار ہوئی ہے۔ ٹرائیکوگراما کارڈز اور زنک کے بروقت استعمال سے سُنڈی کا حملہ صفر رہا۔ تمام کسان بھائیوں کے ساتھ خوشی اور پیداوار کا تجربہ شیئر کر رہا ہوں۔ محنت کبھی رائیگاں نہیں جاتی۔",
             imageRes = R.drawable.img_maize_harvest,
             category = "Maize",
             postType = PostType.SUCCESS,
             district = "Swat",
-            timestamp = "5 hours ago",
-            likeCount = 89,
-            commentCount = 11,
+            timestamp = "4h",
+            likeCount = 98,
+            commentCount = 6,
             isLiked = true,
             isSaved = true,
             comments = listOf(
                 Comment(
                     id = "c_3",
-                    authorName = "Rashid Ali",
+                    authorName = "Khursheed Ahmad",
                     authorDistrict = "Mardan",
-                    text = "MashaAllah brother Bilal! What seed spacing did you use on the ridges?",
-                    timestamp = "3 hours ago",
-                    isExpert = false
+                    authorType = UserType.FARMER,
+                    text = "ماشاء اللہ حسین شاہ بھائی! پودوں کے درمیان آپ نے کیا فاصلہ رکھا تھا؟",
+                    timestamp = "3h",
+                    isLiked = true,
+                    likeCount = 5,
+                    replies = listOf(
+                        ReplyComment(
+                            id = "r_3_1",
+                            authorName = "Hussain Shah",
+                            authorDistrict = "Swat",
+                            authorType = UserType.FARMER,
+                            text = "خورشید بھائی، ہم نے پٹڑیوں پر 8 انچ کا فاصلہ رکھا اور قطاروں میں ڈھائی فٹ رکھا تھا۔",
+                            timestamp = "2h",
+                            isLiked = true,
+                            likeCount = 4
+                        )
+                    )
                 )
             )
         ),
         Post(
             id = "post_3",
-            author = expertDrTariq,
-            text = "🌾 Farmer Advisory: When selecting phosphatic fertilizers for wheat sowing, compare cost per unit of active P2O5 between DAP, TSP, and SSP based on your soil pH. Alkaline soils (>7.8 pH) perform better when phosphorus is placed near the seed drill rather than broad-cast.",
+            author = expertShafiqHussain,
+            text = "تمام کاشتکار بھائیوں کے لیے اہم زرعی الرٹ: گندم میں جڑی بوٹیوں کی تلفی کے لیے سپرے ہمیشہ وتر حالت میں اور دھوپ نکلنے پر کریں۔ چوڑے اور نوکیلے پتوں والی جڑی بوٹیوں کے لیے تجویز کردہ زہریں ہی استعمال کریں۔ غلط وقت پر سپرے فصل کو پیلا کر دیتا ہے۔",
             imageRes = null,
-            category = "Fertilizer Advice",
+            category = "Wheat",
             postType = PostType.AGRI_NEWS,
-            district = "Faisalabad",
-            timestamp = "Yesterday",
-            likeCount = 145,
-            commentCount = 18,
+            district = "Multan",
+            timestamp = "6h",
+            likeCount = 135,
+            commentCount = 8,
             isLiked = false,
-            isSaved = true,
+            isSaved = false,
             comments = emptyList()
         ),
         Post(
             id = "post_4",
-            author = farmerHajiSarwar,
-            text = "Deep plowing and laser leveling underway for wheat sowing in Rahim Yar Khan. Proper leveling has helped us save almost 25% canal water on tubewell turns. Machinery owners, keep your implements serviced!",
-            imageRes = R.drawable.img_pakistan_tractor,
-            category = "Machinery",
+            author = dealerHasnainRaza,
+            text = "گوجرانوالہ اور گردونواح کے کسانوں کے لیے خوشخبری: این ایف سی اور سونا یوریا کھاد کے سرکاری کوٹے کے نئے ٹرک اسٹاک میں پہنچ چکے ہیں۔ منصفانہ تقسیم کے لیے کسان اپنا کسان کارڈ یا شناختی کارڈ دکھا کر کوٹہ حاصل کر سکتے ہیں۔",
+            imageRes = null,
+            category = "Fertilizer",
+            postType = PostType.LISTING,
+            district = "Gujranwala",
+            timestamp = "7h",
+            likeCount = 56,
+            commentCount = 3,
+            isLiked = false,
+            isSaved = false,
+            comments = emptyList()
+        ),
+        Post(
+            id = "post_5",
+            author = farmerHestaRahman,
+            text = "چارسدہ میں کماد (گنّے) کی ترائی اور مٹی چڑھانے کا کام شروع ہے۔ زمین کو نامیاتی مادوں اور گوبر کی کھاد سے زرخیز کرنے کا بہت فائدہ ہوا ہے۔ مٹی نرم رہنے سے گڑ کی مٹھاس اور گٹھے کا وزن دونوں بہتر ہوتے ہیں۔",
+            imageRes = null,
+            category = "Sugarcane",
             postType = PostType.GENERAL,
-            district = "Rahim Yar Khan",
-            timestamp = "1 day ago",
-            likeCount = 67,
+            district = "Charsadda",
+            timestamp = "9h",
+            likeCount = 74,
             commentCount = 4,
             isLiked = false,
             isSaved = false,
             comments = emptyList()
+        ),
+        Post(
+            id = "post_6",
+            author = expertZahidHussain,
+            text = "بارانی علاقوں میں ڈرپ اریگیشن کے کامیاب تجربات سے یہ بات واضح ہوئی ہے کہ روایتی کھالے کے مقابلے میں 40 فیصد پانی کی بچت ہوتی ہے۔ باغات اور سبزیوں میں زمین نم رہتی ہے اور جڑی بوٹیاں کم اگتی ہیں۔ کسان جدید آبپاشی پر سبسڈی سے فائدہ اٹھائیں۔",
+            imageRes = null,
+            category = "Water Management",
+            postType = PostType.AGRI_NEWS,
+            district = "Rawalpindi",
+            timestamp = "12h",
+            likeCount = 112,
+            commentCount = 9,
+            isLiked = true,
+            isSaved = true,
+            comments = emptyList()
         )
     )
 
+    // Demo Stories
+    val initialStories = listOf(
+        FarmerStory(
+            id = "story_1",
+            authorName = "Hussain Shah",
+            authorDistrict = "Swat",
+            avatarInitials = "HS",
+            imageRes = R.drawable.img_maize_harvest,
+            caption = "سوات وادی میں مکئی کی کٹائی کا شاندار منظر! تمام کسان بھائیوں کو مبارک ہو۔",
+            timeAgo = "1h",
+            isViewed = false,
+            storyType = "PHOTO",
+            viewers = listOf("Khursheed Ahmad", "Ahmad Ali", "Shafiq Hussain", "Farman Khan", "Hasnain Raza"),
+            likesCount = 28,
+            isLiked = true,
+            comments = listOf("ماشاء اللہ زبردست پیداوار!", "بہت مبارک ہو بھائی!")
+        ),
+        FarmerStory(
+            id = "story_2",
+            authorName = "Ahmad Ali",
+            authorDistrict = "Faisalabad",
+            avatarInitials = "AA",
+            imageRes = R.drawable.img_wheat_field,
+            caption = "گندم کے کھیت میں زرد زنگ کا معائنہ۔ احتیاطی تدابیر لازمی کریں۔",
+            timeAgo = "2h",
+            isViewed = false,
+            storyType = "PHOTO",
+            viewers = listOf("Khursheed Ahmad", "Hussain Shah", "Sajid Ali", "Zahid Hussain"),
+            likesCount = 45,
+            isLiked = false,
+            comments = listOf("ڈاکٹر صاحب بہت بروقت الرٹ دیا")
+        ),
+        FarmerStory(
+            id = "story_3",
+            authorName = "Hasnain Raza",
+            authorDistrict = "Gujranwala",
+            avatarInitials = "HR",
+            imageRes = 0,
+            caption = "تصدیق شدہ بیج اور اعلیٰ معیار کی جڑی بوٹی مار ادویات دکان پر دستیاب ہیں۔",
+            timeAgo = "4h",
+            isViewed = false,
+            storyType = "TEXT",
+            backgroundColor = 0xFF2E7D32,
+            viewers = listOf("Khursheed Ahmad", "Farman Khan", "Hesta Rahman"),
+            likesCount = 19,
+            isLiked = false,
+            comments = emptyList()
+        ),
+        FarmerStory(
+            id = "story_4",
+            authorName = "Farman Khan",
+            authorDistrict = "Peshawar",
+            avatarInitials = "FK",
+            imageRes = R.drawable.img_wheat_field,
+            caption = "پشاور ریسرچ فارم پر گندم کی نئی ورائٹی کی پیش رفت۔",
+            timeAgo = "5h",
+            isViewed = true,
+            storyType = "PHOTO",
+            viewers = listOf("Khursheed Ahmad", "Mubasir Khan", "Rasool Khan"),
+            likesCount = 31,
+            isLiked = false,
+            comments = emptyList()
+        )
+    )
+
+    // Demo Questions for Community Screen
     val initialQuestions = listOf(
         Question(
             id = "q_1",
-            author = farmerBilal,
-            title = "My tomato plants have spots on lower leaves. What symptoms should I document?",
-            description = "Leaf spots are dark brown with faint concentric rings. Stems look healthy so far. Should I treat for early blight, and what biological or chemical control works best without damaging flowering?",
-            cropCategory = "Vegetables",
-            district = "Swat",
-            timestamp = "3 hours ago",
+            author = currentUser,
+            title = "گندم میں نائٹروجن اور یوریا کی دوسری قسط کب دینی چاہیے؟",
+            description = "ہماری گندم تقریباً 50 دن کی ہو چکی ہے۔ پہلے پانی پر یوریا اور زنک دیا تھا۔ اب دوسرے پانی کے وقت کیا پوٹاش یا یوریا دینا بہتر ہے؟ زمین درمیانی زرخیز ہے۔",
+            cropCategory = "Wheat",
+            district = "Mardan",
+            timestamp = "3h",
             acceptedAnswerId = "ans_1",
             answers = listOf(
                 Answer(
                     id = "ans_1",
-                    authorName = "Dr. Tariq Mahmood",
-                    authorRole = "Agricultural Scientist",
+                    authorName = "Ahmad Ali",
+                    authorRole = "Zari-Mahir",
                     district = "Faisalabad",
-                    text = "Concentric rings are classic symptoms of Early Blight (Alternaria solani). 1) Prune bottom leaves touching soil. 2) Apply Mancozeb or Chlorothalonil early morning. 3) Water via furrow or drip, never wet the foliage in evenings.",
-                    timestamp = "2 hours ago",
-                    upvotes = 24,
+                    text = "خورشید بھائی، 50 سے 55 دن گندم کے لیے گوبھ کی تیاری کا وقت ہے۔ دوسرے پانی کے ساتھ آدھی بوری یوریا اور 12 کلو پوٹاش دینا دانوں کی موٹائی اور وزن کے لیے انتہائی مفید ہے۔ زیادہ نائٹروجن سے پرہیز کریں ورنہ فصل گرنے کا اندیشہ رہتا ہے۔",
+                    timestamp = "2h",
+                    upvotes = 18,
                     isAccepted = true,
-                    isExpert = true
+                    isExpert = true,
+                    authorType = UserType.EXPERT
                 ),
                 Answer(
                     id = "ans_2",
-                    authorName = "Haji Ghulam Sarwar",
-                    authorRole = "Experienced Farmer",
-                    district = "Rahim Yar Khan",
-                    text = "Also check drainage. Water logging in vegetable plots always triggers early blight in humid weather.",
-                    timestamp = "1 hour ago",
-                    upvotes = 8,
+                    authorName = "Hussain Shah",
+                    authorRole = "Kisaan",
+                    district = "Swat",
+                    text = "ہم نے بھی پوٹاش کا استعمال کیا تھا، دانہ بہت چمکدار اور وزنی بنا تھا۔ ماہر صاحب کی رائے بالکل درست ہے۔",
+                    timestamp = "1h",
+                    upvotes = 6,
                     isAccepted = false,
-                    isExpert = false
+                    isExpert = false,
+                    authorType = UserType.FARMER
                 )
             )
         ),
         Question(
             id = "q_2",
-            author = currentUser,
-            title = "Recommended seed rate for Akbar-2019 wheat variety under irrigated conditions?",
-            description = "We are planning sowing in mid-November in Mardan canal command area. What is the optimal seed rate in kg per acre, and do you recommend seed dressing fungicide?",
-            cropCategory = "Wheat",
-            district = "Mardan",
-            timestamp = "Yesterday",
+            author = farmerRasoolKhan,
+            title = "تمباکو اور گندم کی پنیری میں اکھاڑہ کی بیماری کا علاج؟",
+            description = "پنیری کے پودے جڑ کے پاس سے کالے ہو کر سوکھ رہے ہیں۔ فنجی سائیڈ سپرے کیا تھا لیکن کنٹرول نہیں ملا۔",
+            cropCategory = "Agrochemicals",
+            district = "Swabi",
+            timestamp = "5h",
             acceptedAnswerId = null,
             answers = listOf(
                 Answer(
                     id = "ans_3",
-                    authorName = "Haji Ghulam Sarwar",
-                    authorRole = "Wheat Grower",
-                    district = "Rahim Yar Khan",
-                    text = "For Akbar-2019 between Nov 10 to Nov 25, 45 to 50 kg per acre is optimal. If delayed past Dec 1st, increase seed rate to 55-60 kg. Never sow without treating seed with Thiram or Imidacloprid combo.",
-                    timestamp = "18 hours ago",
-                    upvotes = 15,
+                    authorName = "Shafiq Hussain",
+                    authorRole = "Zari-Mahir",
+                    district = "Multan",
+                    text = "یہ ڈیمپنگ آف (Damping-off) یعنی اکھاڑہ کی علامات ہیں۔ کیا بیج کو بوائی سے پہلے تھائیو فینیٹ میتھائل یا میٹالیکسل لگایا تھا؟ اب تنے کے قریب ڈرینچنگ کریں اور پانی کا نکاس ٹھیک کریں۔",
+                    timestamp = "4h",
+                    upvotes = 11,
                     isAccepted = false,
-                    isExpert = false
+                    isExpert = true,
+                    authorType = UserType.EXPERT
                 )
             )
         ),
         Question(
             id = "q_3",
-            author = farmerHajiSarwar,
-            title = "How to manage canal water deficit during sugarcane tillering phase?",
-            description = "Our distributary canal has a 14-day rotation closure. What mulch or deficit irrigation strategy preserves cane tillers best in hot sandy loam?",
-            cropCategory = "Sugarcane",
-            district = "Rahim Yar Khan",
-            timestamp = "2 days ago",
+            author = farmerHestaRahman,
+            title = "کماد کی نئی فصل میں دیمک اور بورر کے حملے سے بچاؤ کے طریقے؟",
+            description = "پچھلے سال گٹھے کے اندر بورر کا حملہ زیادہ تھا۔ اس سال بوائی کے وقت کیا دانے دار زہر ڈالنا ضروری ہے؟",
+            cropCategory = "Farmer problems",
+            district = "Charsadda",
+            timestamp = "8h",
             acceptedAnswerId = null,
             answers = emptyList()
         )
     )
 
+    // Demo Listings for Marketplace
     val initialListings = listOf(
         MarketplaceListing(
-            id = "list_1",
-            title = "Certified Akbar-2019 Wheat Seed (PSC Certified Bags)",
+            id = "mkt_1",
+            title = "تصدیق شدہ فخر بھکر گندم بیج",
             category = "Seeds",
-            price = 4800,
-            unit = "50 kg bag",
-            sellerName = "Haji Ghulam Sarwar",
-            sellerDistrict = "Rahim Yar Khan",
-            sellerPhone = "+92 300 7891234",
-            description = "Cleaned, graded, and certified germinated wheat seed (98% germination rate). Treated with seed fungicide. Delivery available via cargo to Multan and Bahawalpur.",
+            price = 5200,
+            unit = "فی 50 کلو بوری",
+            sellerName = "Shafiq Ahmad",
+            sellerDistrict = "Mardan",
+            sellerPhone = "03001234567",
+            description = "پنجاب سیڈ کارپوریشن کا تصدیق شدہ اور جراثیم کش دوا لگا فخر بھکر گندم کا بیج۔ اگاؤ کی شرح 92 فیصد سے زائد ہے۔",
             imageRes = R.drawable.img_wheat_field,
-            timestamp = "1 day ago",
+            timestamp = "1d",
             isVerifiedSeller = true,
-            availableQuantity = "120 Bags"
+            availableQuantity = "120 بوریاں"
         ),
         MarketplaceListing(
-            id = "list_2",
-            title = "Massey Ferguson 385 Tractor Rental (with Laser Leveler)",
-            category = "Machinery",
-            price = 2500,
-            unit = "hour",
-            sellerName = "Engr. Farooq Ahmad",
-            sellerDistrict = "Sahiwal",
-            sellerPhone = "+92 321 4567890",
-            description = "85 HP powerful tractor with precision computerized laser leveler and experienced operator. Suitable for paddy and wheat land preparation within 25 km of Sahiwal.",
-            imageRes = R.drawable.img_pakistan_tractor,
-            timestamp = "3 hours ago",
-            isVerifiedSeller = true,
-            availableQuantity = "2 Units available"
-        ),
-        MarketplaceListing(
-            id = "list_3",
-            title = "Pioneer 30Y87 Hybrid Maize Seed (High Yield)",
+            id = "mkt_2",
+            title = "ہائبرڈ پائنیر مکئی بیج P1429",
             category = "Seeds",
-            price = 9500,
-            unit = "bag",
-            sellerName = "Bilal Khan",
-            sellerDistrict = "Swat",
-            sellerPhone = "+92 333 1122334",
-            description = "Original sealed Pioneer company packing. Exceptional disease resistance and cob filling. Stored in temperature-controlled room.",
+            price = 14500,
+            unit = "فی پیکٹ",
+            sellerName = "Hasnain Raza",
+            sellerDistrict = "Gujranwala",
+            sellerPhone = "03217654321",
+            description = "اصل درآمد شدہ پائنیر مکئی بیج، زیادہ پیداوار اور سُنڈی کے خلاف قوت مدافعت رکھنے والی قسم۔",
             imageRes = R.drawable.img_maize_harvest,
-            timestamp = "Yesterday",
+            timestamp = "2d",
             isVerifiedSeller = true,
-            availableQuantity = "35 Bags"
+            availableQuantity = "40 پیکٹس"
         ),
         MarketplaceListing(
-            id = "list_4",
-            title = "Imported Water Soluble NPK 20-20-20 (Drip & Foliar)",
-            category = "Fertilizers",
-            price = 7200,
-            unit = "25 kg sack",
-            sellerName = "Zafar Iqbal (Agro Care)",
-            sellerDistrict = "Multan",
-            sellerPhone = "+92 301 9876543",
-            description = "100% water soluble balanced macro nutrients with chelated micro nutrients (Zinc, Boron, Iron). Ideal for vegetables and citrus orchards.",
+            id = "mkt_3",
+            title = "زرعی لیزر لیولر برائے کرایہ و خدمات",
+            category = "Machinery",
+            price = 1800,
+            unit = "فی گھنٹہ",
+            sellerName = "Tariq Aji",
+            sellerDistrict = "Sheikhupura",
+            sellerPhone = "03339876543",
+            description = "جدید ٹاپ کون لیزر لیولر سے کھیت کی 100 فیصد ہمواری۔ پانی کی بچت اور بیج کا یکساں اگاؤ۔",
             imageRes = null,
-            timestamp = "2 days ago",
+            timestamp = "3d",
             isVerifiedSeller = true,
-            availableQuantity = "80 Sacks"
-        )
-    )
-
-    val initialNotifications = listOf(
-        NotificationItem(
-            id = "notif_1",
-            type = NotificationType.REPLY,
-            title = "Expert Advice on Your Post",
-            message = "Dr. Tariq Mahmood replied with recommended fungicide dosage for your wheat crop issue.",
-            timestamp = "1 hour ago",
-            isRead = false,
-            actorName = "Dr. Tariq Mahmood"
-        ),
-        NotificationItem(
-            id = "notif_2",
-            type = NotificationType.LIKE,
-            title = "Post Liked",
-            message = "Bilal Khan and 14 other farmers appreciated your farm update.",
-            timestamp = "3 hours ago",
-            isRead = false,
-            actorName = "Bilal Khan"
-        ),
-        NotificationItem(
-            id = "notif_3",
-            type = NotificationType.FOLLOW,
-            title = "New Follower",
-            message = "Haji Ghulam Sarwar started following your farming journey.",
-            timestamp = "Yesterday",
-            isRead = true,
-            actorName = "Haji Ghulam Sarwar"
-        ),
-        NotificationItem(
-            id = "notif_4",
-            type = NotificationType.ADVISORY,
-            title = "Weather & Mandi Advisory",
-            message = "Morning fog expected across Mardan and Peshawar valley. Inspect early wheat nursery for damp damping-off.",
-            timestamp = "2 days ago",
-            isRead = true,
-            actorName = "Kisaan Book Advisory"
-        )
-    )
-
-    val mandiPrices = listOf(
-        MandiPrice(
-            cropName = "Wheat (New Crop)",
-            cropNameUrdu = "گندم (نئی فصل)",
-            mandiLocation = "Faisalabad Ghalla Mandi",
-            priceMin = 3900,
-            priceMax = 4150,
-            unit = "40 kg (Maund)",
-            dateUpdated = "Updated Today 08:30 AM"
-        ),
-        MandiPrice(
-            cropName = "Basmati Rice (Super Kernal)",
-            cropNameUrdu = "سپر کرنل باسمتی چاول",
-            mandiLocation = "Gujranwala Rice Market",
-            priceMin = 4800,
-            priceMax = 5350,
-            unit = "40 kg (Maund)",
-            dateUpdated = "Updated Today 09:15 AM"
-        ),
-        MandiPrice(
-            cropName = "Maize (Hybrid Grain)",
-            cropNameUrdu = "مکئی (ہائبرڈ دانہ)",
-            mandiLocation = "Mardan Mandi",
-            priceMin = 2650,
-            priceMax = 2850,
-            unit = "40 kg (Maund)",
-            dateUpdated = "Updated Today 07:45 AM"
-        ),
-        MandiPrice(
-            cropName = "Cotton / Phutti",
-            cropNameUrdu = "کپاس پھٹی",
-            mandiLocation = "Multan Mandi",
-            priceMin = 7400,
-            priceMax = 8200,
-            unit = "40 kg (Maund)",
-            dateUpdated = "Updated Yesterday"
-        ),
-        MandiPrice(
-            cropName = "Sugarcane Support Rate",
-            cropNameUrdu = "کماد سرکاری نرخ",
-            mandiLocation = "Rahim Yar Khan Mills",
-            priceMin = 425,
-            priceMax = 450,
-            unit = "40 kg (Maund)",
-            dateUpdated = "Current Season Rate"
+            availableQuantity = "2 یونٹس دستیاب"
         )
     )
 
@@ -380,102 +692,102 @@ object SampleData {
         "Wheat",
         "Maize",
         "Rice",
-        "Cotton",
         "Sugarcane",
+        "Cotton",
         "Vegetables",
-        "Fruits",
-        "Livestock",
-        "Machinery",
-        "Fertilizers"
+        "Citrus",
+        "Barley"
     )
 
-    val pakistaniDistricts = listOf(
-        "Mardan",
-        "Peshawar",
-        "Swat",
-        "Charsadda",
-        "Faisalabad",
-        "Multan",
-        "Lahore",
-        "Gujranwala",
-        "Sahiwal",
-        "Sargodha",
-        "Rahim Yar Khan",
-        "Bahawalpur",
-        "Hyderabad",
-        "Sukkur",
-        "Quetta"
+    val communityFilterChips = listOf(
+        "All",
+        "Farmer problems",
+        "Zari mahir suggestions",
+        "Seeds",
+        "Agrochemicals",
+        "Others"
+    )
+
+    val districtsList = listOf(
+        "Mardan, KP",
+        "Swat, KP",
+        "Charsadda, KP",
+        "Swabi, KP",
+        "Peshawar, KP",
+        "Nowshera, KP",
+        "Faisalabad, Punjab",
+        "Multan, Punjab",
+        "Gujranwala, Punjab",
+        "Sargodha, Punjab",
+        "Sahiwal, Punjab",
+        "Bahawalpur, Punjab",
+        "Rahim Yar Khan, Punjab",
+        "Sheikhupura, Punjab",
+        "Rawalpindi, Punjab",
+        "Sukkur, Sindh"
+    )
+
+    val pakistaniDistricts = districtsList
+
+    val initialNotifications = listOf(
+        NotificationItem(
+            id = "notif_1",
+            type = NotificationType.COMMENT,
+            title = "Ahmad Ali replied to your post",
+            message = "احمد علی صاحب نے آپ کی گندم کی پوسٹ پر مشورہ دیا ہے۔",
+            timestamp = "1h ago",
+            isRead = false,
+            actorName = "Ahmad Ali",
+            targetPostId = "post_1"
+        ),
+        NotificationItem(
+            id = "notif_2",
+            type = NotificationType.LIKE,
+            title = "Hussain Shah liked your post",
+            message = "حسین شاہ نے آپ کی پوسٹ کو پسند کیا۔",
+            timestamp = "2h ago",
+            isRead = false,
+            actorName = "Hussain Shah",
+            targetPostId = "post_1"
+        ),
+        NotificationItem(
+            id = "notif_3",
+            type = NotificationType.ADVISORY,
+            title = "Yellow Rust Weather Advisory",
+            message = "محکمہ زراعت: گندم میں زرد زنگ سے بچاؤ کی ہدایات جاری کر دی گئی ہیں۔",
+            timestamp = "5h ago",
+            isRead = true,
+            actorName = "Zari Advisory",
+            targetPostId = null
+        )
+    )
+
+    val mandiPrices = listOf(
+        MandiPrice("Wheat", "گندم", "Mardan Mandi", 4200, 4400, "فی 40 کلو", "آج صبح"),
+        MandiPrice("Maize", "مکئی", "Swat Mandi", 2600, 2800, "فی 40 کلو", "آج صبح"),
+        MandiPrice("Sugarcane", "کماد", "Charsadda Mill", 425, 450, "فی 40 کلو", "آج صبح")
     )
 
     val articles = listOf(
         AgriArticle(
             id = "art_1",
-            title = "Managing Yellow Rust in Wheat During Humid Morning Fog",
-            titleUrdu = "گندم میں زرد کنگی کا سائنسی تدارک اور احتیاطی تدابیر",
-            category = "Pest & Disease",
-            summary = "Recognize early leaf stripe symptoms and understand when chemical spray is economically beneficial.",
-            content = "Yellow rust (Puccinia striiformis) thrives in temperatures between 10°C and 15°C accompanied by dew or high humidity. Farmers should regularly inspect the field on sunny afternoons. Look for bright yellow, powdery pustules aligned linearly along leaf veins. If more than 5% of flag leaves show symptoms, apply approved triazole fungicides (such as Propiconazole 25% EC at 200 ml/acre or Tebuconazole) using a hollow-cone nozzle. Ensure proper water volume (100-120 liters of clean water per acre).",
-            source = "Punjab & KP Agriculture Extension Guidelines",
+            title = "Combating Yellow Rust in Wheat",
+            titleUrdu = "گندم میں زرد زنگ کا سدباب",
+            category = "Crop Protection",
+            summary = "Essential fungicides and irrigation timing for damp weather.",
+            content = "نم اور دھند والے موسم میں گندم کے کھیتوں کا روزانہ معائنہ کریں۔ زرد لکیریں ظاہر ہوتے ہی محکمہ زراعت سے تصدیق شدہ فنجی سائیڈ سپرے 48 گھنٹے کے اندر کریں۔",
+            source = "Faisalabad Agricultural Research",
             readTime = "3 min read"
         ),
         AgriArticle(
             id = "art_2",
-            title = "Balanced NPK Fertilization: Maximizing Grain Weight",
-            titleUrdu = "متوازن کھادوں کا استعمال: نائٹروجن، فاسفورس اور پوٹاش کا تناسب",
-            category = "Soil & Fertilizer",
-            summary = "Why relying solely on Urea without Potassium limits tillering and root development.",
-            content = "Excessive nitrogen (Urea) produces weak, lodging-prone stems and makes plants succulent and attractive to aphids and rust. Phosphorus (DAP/TSP) must be placed deep at sowing time for vigorous root anchoring. Potassium (SOP/MOP) should not be skipped, as it regulates stomatal water loss and directly fills grain starch during milking stage.",
-            source = "National Agricultural Research Centre (NARC)",
+            title = "Balanced Nitrogen and Potash Timing",
+            titleUrdu = "متوازن نائٹروجن اور پوٹاش کھاد کا استعمال",
+            category = "Soil Fertility",
+            summary = "Why potash is crucial at booting stage.",
+            content = "گندم اور مکئی میں گوبھ کے وقت پوٹاش کھاد دانے کی چمک، موٹائی اور وزن میں خاطر خواہ اضافہ کرتی ہے۔",
+            source = "Soil Science Directorate",
             readTime = "4 min read"
-        ),
-        AgriArticle(
-            id = "art_3",
-            title = "Laser Land Leveling: Saving 25% Canal Water",
-            titleUrdu = "لیزر لینڈ لیولنگ: پانی اور ڈیزل کی ۲۵ فیصد بچت",
-            category = "Machinery & Water",
-            summary = "How flat seedbeds prevent water-logging in furrows and ensure uniform germination.",
-            content = "Unlevel fields suffer from water ponding in depressions and drought on high ridges. Laser leveling using scraper attachments ensures uniform water sheet propagation, cutting irrigation run time by 20-30%, reducing weed infestation by 40%, and increasing overall fertilizer efficiency.",
-            source = "On-Farm Water Management Directorate",
-            readTime = "3 min read"
-        )
-    )
-
-    val initialStories = listOf(
-        FarmerStory(
-            id = "story_1",
-            authorName = "Dr. Tariq",
-            authorDistrict = "Faisalabad",
-            avatarInitials = "TM",
-            imageRes = R.drawable.img_wheat_field,
-            caption = "Wheat Rust Scouting: Check flag leaves early morning for yellow powder pustules.",
-            timeAgo = "1h ago"
-        ),
-        FarmerStory(
-            id = "story_2",
-            authorName = "Bilal Khan",
-            authorDistrict = "Swat",
-            avatarInitials = "BK",
-            imageRes = R.drawable.img_maize_harvest,
-            caption = "Alhamdulillah, 98 maunds per acre harvested from Pioneer 30Y87 hybrid plot!",
-            timeAgo = "3h ago"
-        ),
-        FarmerStory(
-            id = "story_3",
-            authorName = "Haji Sarwar",
-            authorDistrict = "Rahim Yar Khan",
-            avatarInitials = "GS",
-            imageRes = R.drawable.img_pakistan_tractor,
-            caption = "Laser leveling completed for 25 acres. Saving tubewell diesel and irrigation turns.",
-            timeAgo = "5h ago"
-        ),
-        FarmerStory(
-            id = "story_4",
-            authorName = "Agro Multan",
-            authorDistrict = "Multan",
-            avatarInitials = "AM",
-            imageRes = R.drawable.img_wheat_field,
-            caption = "New batch of certified imported DAP and zinc arrived at Multan Mandi gate.",
-            timeAgo = "7h ago"
         )
     )
 }

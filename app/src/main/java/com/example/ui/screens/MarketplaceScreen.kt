@@ -30,8 +30,6 @@ fun MarketplaceScreen(
     listings: List<MarketplaceListing>,
     onCreateListingClick: () -> Unit,
     onContactSellerClick: (MarketplaceListing) -> Unit,
-    onOpenMandiRatesClick: () -> Unit = {},
-    onUpdateMandiRatesClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var searchQuery by remember { mutableStateOf("") }
@@ -140,63 +138,7 @@ fun MarketplaceScreen(
             verticalArrangement = Arrangement.spacedBy(14.dp),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
         ) {
-            // Mandi Market Rates Quick Bar
-            item {
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.TrendingUp,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Column {
-                                Text(
-                                    text = "Ghalla Mandi Official Rates",
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 13.sp,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Text(
-                                    text = "غلہ منڈی ریٹس • روزانہ کی تازہ ترین قیمتیں",
-                                    fontSize = 11.sp,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
 
-                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            OutlinedButton(
-                                onClick = onOpenMandiRatesClick,
-                                shape = RoundedCornerShape(8.dp),
-                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
-                            ) {
-                                Text("View", fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                            }
-                            Button(
-                                onClick = onUpdateMandiRatesClick,
-                                shape = RoundedCornerShape(8.dp),
-                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
-                                modifier = Modifier.testTag("marketplace_update_mandi_button")
-                            ) {
-                                Text("Edit Rates", fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                            }
-                        }
-                    }
-                }
-            }
 
             // Safety banner
             item {
@@ -368,11 +310,20 @@ fun ListingCard(
                                 )
                             }
                         }
-                        Text(
-                            text = "📍 ${listing.sellerDistrict}${listing.availableQuantity?.let { " • Stock: $it" } ?: ""}",
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.LocationOn,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Text(
+                                text = "${listing.sellerDistrict}${listing.availableQuantity?.let { " • Stock: $it" } ?: ""}",
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
 
                     Button(

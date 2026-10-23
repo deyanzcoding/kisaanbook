@@ -20,19 +20,19 @@ enum class ThemeMode {
 private val DarkColorScheme =
   darkColorScheme(
     primary = GreenDarkPrimary,
-    onPrimary = Color(0xFF00390E),
+    onPrimary = Color(0xFF1E2E00),
     primaryContainer = GreenPrimaryDark,
-    onPrimaryContainer = Color(0xFFA5D6A7),
+    onPrimaryContainer = Color(0xFFEFF7DC),
     secondary = GreenDarkSecondary,
-    onSecondary = Color(0xFF0D3813),
+    onSecondary = Color(0xFF162500),
     tertiary = GreenDarkTertiary,
     background = BackgroundDark,
     onBackground = TextPrimaryDark,
     surface = SurfaceDark,
     onSurface = TextPrimaryDark,
-    surfaceVariant = Color(0xFF263829),
+    surfaceVariant = Color(0xFF2C2F33),
     onSurfaceVariant = TextSecondaryDark,
-    outline = Color(0xFF4C6650)
+    outline = Color(0xFF3E4042)
   )
 
 private val LightColorScheme =
@@ -43,16 +43,16 @@ private val LightColorScheme =
     onPrimaryContainer = GreenPrimaryDark,
     secondary = GreenSecondary,
     onSecondary = Color.White,
-    secondaryContainer = Color(0xFFDCEDC8),
+    secondaryContainer = Color(0xFFE2EFC4),
     onSecondaryContainer = GreenPrimaryDark,
     tertiary = GreenTertiary,
     background = BackgroundLight,
     onBackground = TextPrimaryLight,
     surface = SurfaceLight,
     onSurface = TextPrimaryLight,
-    surfaceVariant = Color(0xFFF1F5EF),
+    surfaceVariant = Color(0xFFF0F2F5),
     onSurfaceVariant = TextSecondaryLight,
-    outline = Color(0xFFD0DCD0)
+    outline = Color(0xFFCED0D4)
   )
 
 @Composable

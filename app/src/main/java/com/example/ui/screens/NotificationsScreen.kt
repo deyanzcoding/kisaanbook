@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -27,7 +28,8 @@ import com.example.model.NotificationType
 @Composable
 fun NotificationsScreen(
     notifications: List<NotificationItem>,
-    onMarkAsRead: (String) -> Unit,
+    onBackClick: () -> Unit,
+    onNotificationClick: (NotificationItem) -> Unit,
     onMarkAllRead: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -42,22 +44,35 @@ fun NotificationsScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Column {
-                        Text(
-                            text = "Notifications & Alerts",
-                            fontSize = 19.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = "اطلاعات اور تازہ ترین پیغامات",
-                            fontSize = 13.sp,
-                            color = MaterialTheme.colorScheme.primary
-                        )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(
+                            onClick = onBackClick,
+                            modifier = Modifier.testTag("notifications_back_button")
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back to Feed",
+                                tint = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Column {
+                            Text(
+                                text = "Notifications & Alerts",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "اطلاعات اور تازہ ترین پیغامات",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
 
                     TextButton(
@@ -95,7 +110,7 @@ fun NotificationsScreen(
                 items(notifications, key = { it.id }) { item ->
                     NotificationCard(
                         item = item,
-                        onClick = { onMarkAsRead(item.id) }
+                        onClick = { onNotificationClick(item) }
                     )
                 }
             }
@@ -172,13 +187,34 @@ fun NotificationCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     lineHeight = 16.sp
                 )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = item.timestamp,
-                    fontSize = 11.sp,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Medium
-                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = item.timestamp,
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Medium
+                    )
+
+                    if (item.targetPostId != null) {
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
+                        ) {
+                            Text(
+                                text = "View Post ↗",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                }
             }
 
             if (!item.isRead) {

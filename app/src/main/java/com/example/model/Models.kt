@@ -1,5 +1,11 @@
 package com.example.model
 
+enum class UserType(val code: String, val labelEn: String, val labelUr: String) {
+    FARMER("kisaan", "Kisaan", "کسان"),
+    EXPERT("zari-mahir", "Zari-Mahir", "زرعی ماہر"),
+    DEALER("dokandar", "Dokandar", "دوکاندار")
+}
+
 enum class PostType(val labelEn: String, val labelUr: String) {
     GENERAL("Update", "عام معلومات"),
     QUESTION("Question", "سوال"),
@@ -18,11 +24,24 @@ data class Farmer(
     val experienceYears: Int = 5,
     val bio: String,
     val isExpert: Boolean = false,
+    val userType: UserType = if (isExpert) UserType.EXPERT else UserType.FARMER,
     val isFollowing: Boolean = false,
     val followersCount: Int = 120,
     val followingCount: Int = 45,
     val postsCount: Int = 12,
-    val avatarInitials: String = name.take(2).uppercase()
+    val avatarInitials: String = name.take(2).uppercase(),
+    val avatarUri: String? = null
+)
+
+data class ReplyComment(
+    val id: String,
+    val authorName: String,
+    val authorType: UserType = UserType.FARMER,
+    val authorDistrict: String,
+    val text: String,
+    val timestamp: String,
+    val isLiked: Boolean = false,
+    val likeCount: Int = 0
 )
 
 data class Comment(
@@ -31,7 +50,11 @@ data class Comment(
     val authorDistrict: String,
     val text: String,
     val timestamp: String,
-    val isExpert: Boolean = false
+    val isExpert: Boolean = false,
+    val authorType: UserType = if (isExpert) UserType.EXPERT else UserType.FARMER,
+    val isLiked: Boolean = false,
+    val likeCount: Int = 0,
+    val replies: List<ReplyComment> = emptyList()
 )
 
 data class Post(
@@ -39,8 +62,10 @@ data class Post(
     val author: Farmer,
     val text: String,
     val imageRes: Int? = null,
+    val imageUri: String? = null,
     val category: String,
     val postType: PostType,
+    val customPostType: String? = null,
     val district: String,
     val timestamp: String,
     val likeCount: Int,
@@ -59,7 +84,8 @@ data class Answer(
     val timestamp: String,
     val upvotes: Int,
     val isAccepted: Boolean = false,
-    val isExpert: Boolean = false
+    val isExpert: Boolean = false,
+    val authorType: UserType = if (isExpert) UserType.EXPERT else UserType.FARMER
 )
 
 data class Question(
@@ -71,7 +97,10 @@ data class Question(
     val district: String,
     val timestamp: String,
     val acceptedAnswerId: String? = null,
-    val answers: List<Answer> = emptyList()
+    val answers: List<Answer> = emptyList(),
+    val mediaType: String? = null, // "VOICE", "PICTURE", "TEXT"
+    val mediaUri: String? = null,
+    val audioDurationSeconds: Int = 0
 ) {
     val isSolved: Boolean get() = acceptedAnswerId != null
     val repliesCount: Int get() = answers.size
@@ -104,7 +133,8 @@ data class NotificationItem(
     val message: String,
     val timestamp: String,
     val isRead: Boolean = false,
-    val actorName: String
+    val actorName: String,
+    val targetPostId: String? = null
 )
 
 data class MandiPrice(
@@ -132,9 +162,16 @@ data class FarmerStory(
     val id: String,
     val authorName: String,
     val authorDistrict: String,
-    val avatarInitials: String,
-    val imageRes: Int,
+    val avatarInitials: String = authorName.take(2).uppercase(),
+    val imageRes: Int = 0,
+    val imageUri: String? = null,
     val caption: String,
     val timeAgo: String,
-    val isViewed: Boolean = false
+    val isViewed: Boolean = false,
+    val storyType: String = "PHOTO", // "PHOTO", "VIDEO", "TEXT"
+    val backgroundColor: Long? = null,
+    val viewers: List<String> = emptyList(),
+    val likesCount: Int = 0,
+    val isLiked: Boolean = false,
+    val comments: List<String> = emptyList()
 )

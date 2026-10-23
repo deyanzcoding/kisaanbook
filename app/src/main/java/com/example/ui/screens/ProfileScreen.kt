@@ -1,6 +1,7 @@
 package com.example.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,6 +19,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 import com.example.localization.AppLanguage
 import com.example.localization.Strings
 import com.example.model.Farmer
@@ -41,9 +44,12 @@ fun ProfileScreen(
     onCommentClick: (Post) -> Unit,
     onSaveClick: (String) -> Unit,
     onDeletePost: (String) -> Unit,
+    onFollowClick: (String) -> Unit = {},
+    onImageClick: (Post) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var selectedProfileTab by remember { mutableIntStateOf(0) } // 0: Posts, 1: Questions, 2: Saved
+    var isBioExpanded by remember { mutableStateOf(false) }
 
     val myPosts = remember(posts, farmer.id) {
         posts.filter { it.author.id == farmer.id }
@@ -112,12 +118,23 @@ fun ProfileScreen(
                                     .background(MaterialTheme.colorScheme.primaryContainer),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(
-                                    text = farmer.avatarInitials,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    fontSize = 24.sp,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
+                                if (farmer.avatarUri != null) {
+                                    AsyncImage(
+                                        model = farmer.avatarUri,
+                                        contentDescription = "Profile Photo",
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .clip(CircleShape)
+                                    )
+                                } else {
+                                    Text(
+                                        text = farmer.avatarInitials,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        fontSize = 24.sp,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                }
                             }
 
                             Spacer(modifier = Modifier.width(20.dp))
@@ -135,7 +152,7 @@ fun ProfileScreen(
 
                         Spacer(modifier = Modifier.height(14.dp))
 
-                        // Bio Details
+                        // Bio Details Header
                         Text(
                             text = farmer.name,
                             fontWeight = FontWeight.Bold,
@@ -149,18 +166,55 @@ fun ProfileScreen(
                             fontWeight = FontWeight.Medium
                         )
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "📍 ${farmer.district} • ${farmer.experienceYears}+ years farming",
-                            fontSize = 13.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.LocationOn,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "${farmer.district} • ${farmer.experienceYears}+ years farming",
+                                fontSize = 13.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                         Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = farmer.bio,
-                            fontSize = 13.sp,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            lineHeight = 18.sp
-                        )
+
+                        // Bio paragraph with See More / See Less toggle
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Text(
+                                text = farmer.bio,
+                                fontSize = 13.sp,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                lineHeight = 18.sp,
+                                maxLines = if (isBioExpanded) Int.MAX_VALUE else 2,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .clickable { isBioExpanded = !isBioExpanded }
+                                    .padding(vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = if (isBioExpanded) "See less" else "See more details",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Spacer(modifier = Modifier.width(2.dp))
+                                Icon(
+                                    imageVector = if (isBioExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
 
                         Spacer(modifier = Modifier.height(10.dp))
 
@@ -191,35 +245,18 @@ fun ProfileScreen(
 
                         Spacer(modifier = Modifier.height(14.dp))
 
-                        // Action Buttons: Edit Profile & Log Out
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        // Action Button: Edit Profile (Theme Mode button removed as requested)
+                        OutlinedButton(
+                            onClick = onEditProfileClick,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(44.dp)
+                                .testTag("edit_profile_button"),
+                            shape = RoundedCornerShape(10.dp)
                         ) {
-                            OutlinedButton(
-                                onClick = onEditProfileClick,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(44.dp)
-                                    .testTag("edit_profile_button"),
-                                shape = RoundedCornerShape(10.dp)
-                            ) {
-                                Icon(imageVector = Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(Strings.editProfile(appLanguage), fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                            }
-
-                            Button(
-                                onClick = onSettingsClick,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(44.dp),
-                                shape = RoundedCornerShape(10.dp)
-                            ) {
-                                Icon(imageVector = Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(Strings.theme(appLanguage), fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                            }
+                            Icon(imageVector = Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(Strings.editProfile(appLanguage), fontWeight = FontWeight.Bold, fontSize = 13.sp)
                         }
                     } else {
                         // Guest State Card
@@ -314,7 +351,9 @@ fun ProfileScreen(
                                 post = post,
                                 onLikeClick = { onLikeClick(post.id) },
                                 onCommentClick = { onCommentClick(post) },
-                                onSaveClick = { onSaveClick(post.id) }
+                                onSaveClick = { onSaveClick(post.id) },
+                                onFollowClick = { onFollowClick(post.author.id) },
+                                onImageClick = { onImageClick(post) }
                             )
                         }
                     }
@@ -362,7 +401,9 @@ fun ProfileScreen(
                                 post = post,
                                 onLikeClick = { onLikeClick(post.id) },
                                 onCommentClick = { onCommentClick(post) },
-                                onSaveClick = { onSaveClick(post.id) }
+                                onSaveClick = { onSaveClick(post.id) },
+                                onFollowClick = { onFollowClick(post.author.id) },
+                                onImageClick = { onImageClick(post) }
                             )
                         }
                     }
