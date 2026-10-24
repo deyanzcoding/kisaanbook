@@ -106,10 +106,42 @@ data class Question(
     val repliesCount: Int get() = answers.size
 }
 
+/**
+ * Community Post: supports Text, Voice audio recording, Picture, or all at once!
+ */
+data class CommunityPost(
+    val id: String,
+    val author: Farmer,
+    val text: String = "",
+    val voiceUri: String? = null,
+    val voiceDurationSeconds: Int = 0,
+    val imageRes: Int? = null,
+    val imageUri: String? = null,
+    val category: String = "General",
+    val district: String,
+    val timestamp: String,
+    val likeCount: Int = 0,
+    val isLiked: Boolean = false,
+    val comments: List<Comment> = emptyList()
+) {
+    val hasText: Boolean get() = text.isNotBlank()
+    val hasVoice: Boolean get() = !voiceUri.isNullOrBlank() || voiceDurationSeconds > 0
+    val hasPicture: Boolean get() = imageRes != null || !imageUri.isNullOrBlank()
+}
+
+/**
+ * Tractor & Machinery specific details for marketplace
+ */
+data class MachineryDetails(
+    val makeModelYear: String,
+    val horsepower: String,
+    val condition: String // "New", "Used - Excellent", "Used - Fair", "Reconditioned"
+)
+
 data class MarketplaceListing(
     val id: String,
     val title: String,
-    val category: String,
+    val category: String, // "Tractor & Machinery", "Seeds", "Fertilizers", "Pesticides & Sprays", "Crops & Produce", "Livestock"
     val price: Long,
     val unit: String,
     val sellerName: String,
@@ -119,7 +151,112 @@ data class MarketplaceListing(
     val imageRes: Int? = null,
     val timestamp: String,
     val isVerifiedSeller: Boolean = true,
-    val availableQuantity: String? = null
+    val availableQuantity: String? = null,
+    val sellerBio: String = "Authorized Agricultural Input Dealer & Farmer Partner.",
+    val machineryDetails: MachineryDetails? = null
+)
+
+// ========== FARM CROP PLANNER & CROPS MANAGEMENT ==========
+
+data class NutrientItem(
+    val name: String,
+    val nameUrdu: String,
+    val stage: String,
+    val dosage: String,
+    val purpose: String,
+    val recommendedDealers: List<String> = emptyList()
+)
+
+data class MedicineItem(
+    val diseaseOrPest: String,
+    val diseaseOrPestUrdu: String,
+    val sprayName: String,
+    val timing: String,
+    val dosage: String,
+    val recommendedDealers: List<String> = emptyList()
+)
+
+data class FarmCrop(
+    val id: String,
+    val cropName: String,
+    val cropNameUrdu: String,
+    val variety: String,
+    val sowingDate: String,
+    val areaAcres: Double,
+    val soilType: String,
+    val district: String,
+    val province: String,
+    val currentStage: String,
+    val currentStageUrdu: String,
+    val durationDays: Int,
+    val daysElapsed: Int,
+    val weatherTips: List<String>,
+    val nutrientsSchedule: List<NutrientItem>,
+    val medicineSchedule: List<MedicineItem>,
+    val estimatedYield: String = "40–45 Maunds/Acre"
+) {
+    val progressPercent: Float
+        get() = (daysElapsed.toFloat() / durationDays.toFloat()).coerceIn(0f, 1f)
+    val remainingDays: Int
+        get() = maxOf(0, durationDays - daysElapsed)
+}
+
+// ========== ZAMEEN-DARI KHATA (FARM EXPENSE & INCOME LEDGER) ==========
+
+enum class KhataType(val labelEn: String, val labelUr: String) {
+    EXPENSE("Expense", "خرچہ"),
+    INCOME("Income", "آمدن")
+}
+
+data class KhataEntry(
+    val id: String,
+    val cropId: String? = null,
+    val cropName: String,
+    val type: KhataType,
+    val category: String, // "Seed", "Fertilizer", "Land Prep / Tractor", "Spray / Medicine", "Tube Well / Water", "Labor / Harvest", "Harvest Crop Sale"
+    val amount: Long,
+    val description: String,
+    val date: String
+)
+
+// ========== AI PLANT PROBLEM DIAGNOSIS ==========
+
+data class PlantDiagnosis(
+    val problemName: String,
+    val problemNameUrdu: String,
+    val severity: String, // "Mild", "Moderate", "Critical"
+    val symptoms: List<String>,
+    val recommendedTreatment: String,
+    val recommendedSprays: List<String>,
+    val preventiveTips: List<String>,
+    val recommendedDealers: List<String> = emptyList(),
+    val sampleImageRes: Int = 0
+)
+
+// ========== CALENDAR SCREEN MODELS ==========
+
+enum class CalendarType(val title: String) {
+    GREGORIAN("English"),
+    HIJRI("Arabic / Islamic"),
+    PASHTUN("Pashtun / Desi")
+}
+
+enum class Province(val displayName: String) {
+    PUNJAB("Punjab"),
+    SINDH("Sindh"),
+    KP("Khyber Pakhtunkhwa"),
+    BALOCHISTAN("Balochistan"),
+    ISLAMABAD("Islamabad / North"),
+    UNKNOWN("Pakistan (General)")
+}
+
+data class MonthInfo(
+    val id: Int,
+    val gregorianName: String,
+    val pashtoName: String,
+    val pashtoScript: String,
+    val hijriName: String,
+    val baseCrops: List<String>
 )
 
 enum class NotificationType {

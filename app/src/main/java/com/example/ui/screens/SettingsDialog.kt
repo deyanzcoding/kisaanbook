@@ -37,6 +37,9 @@ fun SettingsDialog(
     onLogout: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    val isUrdu = currentLanguage == AppLanguage.URDU
+    val isPashto = currentLanguage == AppLanguage.PASHTO
+
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -45,13 +48,14 @@ fun SettingsDialog(
             modifier = Modifier
                 .fillMaxWidth(0.92f)
                 .wrapContentHeight()
-                .clip(RoundedCornerShape(20.dp)),
-            color = MaterialTheme.colorScheme.surface
+                .clip(RoundedCornerShape(24.dp)),
+            color = MaterialTheme.colorScheme.surface,
+            tonalElevation = 6.dp
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(20.dp),
+                    .padding(22.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // Header
@@ -63,7 +67,7 @@ fun SettingsDialog(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier = Modifier
-                                .size(36.dp)
+                                .size(40.dp)
                                 .clip(CircleShape)
                                 .background(MaterialTheme.colorScheme.primaryContainer),
                             contentAlignment = Alignment.Center
@@ -71,20 +75,20 @@ fun SettingsDialog(
                             Icon(
                                 imageVector = Icons.Default.Settings,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier.size(20.dp)
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(22.dp)
                             )
                         }
-                        Spacer(modifier = Modifier.width(10.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(
-                                text = Strings.settingsTitle(currentLanguage),
-                                fontSize = 17.sp,
+                                text = if (isUrdu) "ترتیبات (Settings)" else if (isPashto) "تنظیمات" else "Settings",
+                                fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "Kisaan Book • کسان بک",
+                                text = "Kisaan Book • کسان بُک",
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -95,56 +99,10 @@ fun SettingsDialog(
                     }
                 }
 
-                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-                // SECTION 1: Theme Switch (Light / Dark / System)
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Palette,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = Strings.theme(currentLanguage),
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        ThemeOptionCard(
-                            title = Strings.themeLight(currentLanguage),
-                            icon = Icons.Default.LightMode,
-                            isSelected = currentTheme == ThemeMode.LIGHT,
-                            onClick = { onThemeChange(ThemeMode.LIGHT) },
-                            modifier = Modifier.weight(1f)
-                        )
-                        ThemeOptionCard(
-                            title = Strings.themeDark(currentLanguage),
-                            icon = Icons.Default.DarkMode,
-                            isSelected = currentTheme == ThemeMode.DARK,
-                            onClick = { onThemeChange(ThemeMode.DARK) },
-                            modifier = Modifier.weight(1f)
-                        )
-                        ThemeOptionCard(
-                            title = Strings.themeSystem(currentLanguage),
-                            icon = Icons.Default.BrightnessAuto,
-                            isSelected = currentTheme == ThemeMode.SYSTEM,
-                            onClick = { onThemeChange(ThemeMode.SYSTEM) },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                }
-
-                // SECTION 2: Language Selector (English / Urdu / Pashto)
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                // SECTION 1: Language Selector (Urdu Default, English, Pashto)
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.Language,
@@ -154,31 +112,32 @@ fun SettingsDialog(
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = Strings.language(currentLanguage),
+                            text = if (isUrdu) "ایپ کی زبان (Language)" else "App Language",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     }
 
+                    // 3 Language Options: Urdu (Default First), English, Pashto
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         LanguageOptionCard(
-                            language = AppLanguage.ENGLISH,
-                            title = "English",
-                            subtitle = "Default",
-                            isSelected = currentLanguage == AppLanguage.ENGLISH,
-                            onClick = { onLanguageChange(AppLanguage.ENGLISH) },
+                            language = AppLanguage.URDU,
+                            title = "اردو",
+                            subtitle = if (isUrdu) "بنیادی (Default)" else "Default",
+                            isSelected = currentLanguage == AppLanguage.URDU,
+                            onClick = { onLanguageChange(AppLanguage.URDU) },
                             modifier = Modifier.weight(1f)
                         )
                         LanguageOptionCard(
-                            language = AppLanguage.URDU,
-                            title = "اردو",
-                            subtitle = "Urdu",
-                            isSelected = currentLanguage == AppLanguage.URDU,
-                            onClick = { onLanguageChange(AppLanguage.URDU) },
+                            language = AppLanguage.ENGLISH,
+                            title = "English",
+                            subtitle = "انگریزی",
+                            isSelected = currentLanguage == AppLanguage.ENGLISH,
+                            onClick = { onLanguageChange(AppLanguage.ENGLISH) },
                             modifier = Modifier.weight(1f)
                         )
                         LanguageOptionCard(
@@ -192,102 +151,181 @@ fun SettingsDialog(
                     }
                 }
 
-                // SECTION 3: Account & Session
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+                // SECTION 2: Theme Switch (Light / Dark / Auto)
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = Icons.Default.Person,
+                            imageVector = Icons.Default.Palette,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = Strings.tabProfile(currentLanguage),
+                            text = if (isUrdu) "ڈسپلے موڈ (Theme Mode)" else "Theme Mode",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     }
 
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                        modifier = Modifier.fillMaxWidth()
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                        ThemeOptionCard(
+                            title = if (isUrdu) "روشن" else "Light",
+                            icon = Icons.Default.LightMode,
+                            isSelected = currentTheme == ThemeMode.LIGHT,
+                            onClick = { onThemeChange(ThemeMode.LIGHT) },
+                            modifier = Modifier.weight(1f)
+                        )
+                        ThemeOptionCard(
+                            title = if (isUrdu) "ڈارک" else "Dark",
+                            icon = Icons.Default.DarkMode,
+                            isSelected = currentTheme == ThemeMode.DARK,
+                            onClick = { onThemeChange(ThemeMode.DARK) },
+                            modifier = Modifier.weight(1f)
+                        )
+                        ThemeOptionCard(
+                            title = if (isUrdu) "خودکار" else "Auto",
+                            icon = Icons.Default.BrightnessAuto,
+                            isSelected = currentTheme == ThemeMode.SYSTEM,
+                            onClick = { onThemeChange(ThemeMode.SYSTEM) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+                // SECTION 3: Restyled Account Session (Login / Logout)
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.AccountCircle,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = if (isUrdu) "اکاؤنٹ اور لاگ ان کیفیت" else "Account & Session",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+
+                    if (isLoggedIn) {
+                        Card(
+                            shape = RoundedCornerShape(14.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .clip(CircleShape)
-                                        .background(MaterialTheme.colorScheme.primaryContainer),
-                                    contentAlignment = Alignment.Center
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(14.dp),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Text(
-                                        text = if (isLoggedIn) currentUser.avatarInitials else "?",
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                                    )
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                    ) {
+                                        Surface(
+                                            shape = CircleShape,
+                                            color = MaterialTheme.colorScheme.primaryContainer,
+                                            modifier = Modifier.size(42.dp)
+                                        ) {
+                                            Box(contentAlignment = Alignment.Center) {
+                                                Text(
+                                                    text = currentUser.name.take(2).uppercase(),
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = MaterialTheme.colorScheme.primary
+                                                )
+                                            }
+                                        }
+
+                                        Column {
+                                            Text(
+                                                text = currentUser.name,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 14.sp
+                                            )
+                                            Text(
+                                                text = "${currentUser.district} • فعال اکاؤنٹ",
+                                                fontSize = 12.sp,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                        }
+                                    }
+
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = Color(0xFFE8F5E9)
+                                    ) {
+                                        Text(
+                                            text = "لاگ ان",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color(0xFF2E7D32),
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                        )
+                                    }
                                 }
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Column {
-                                    Text(
-                                        text = if (isLoggedIn) currentUser.name else "Guest Farmer",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 14.sp
-                                    )
-                                    Text(
-                                        text = if (isLoggedIn) currentUser.district else "Not signed in",
-                                        fontSize = 12.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
+
+                                OutlinedButton(
+                                    onClick = onLogout,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFC62828)),
+                                    shape = RoundedCornerShape(10.dp)
+                                ) {
+                                    Icon(imageVector = Icons.Default.Logout, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(if (isUrdu) "اکاؤنٹ سے لاگ آؤٹ کریں" else "Logout from Account", fontWeight = FontWeight.Bold)
                                 }
                             }
+                        }
+                    } else {
+                        Card(
+                            shape = RoundedCornerShape(14.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(14.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = if (isUrdu) "آپ بطور مہمان استعمال کر رہے ہیں" else "You are browsing as Guest",
+                                    fontSize = 13.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
 
-                            if (isLoggedIn) {
-                                TextButton(
-                                    onClick = {
-                                        onLogout()
-                                        onDismiss()
-                                    },
-                                    colors = ButtonDefaults.textButtonColors(contentColor = Color(0xFFD32F2F))
-                                ) {
-                                    Text(Strings.logout(currentLanguage), fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                                }
-                            } else {
                                 Button(
-                                    onClick = {
-                                        onDismiss()
-                                        onOpenAuth()
-                                    },
+                                    onClick = onOpenAuth,
+                                    modifier = Modifier.fillMaxWidth(),
                                     shape = RoundedCornerShape(10.dp),
-                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                                 ) {
-                                    Text(Strings.login(currentLanguage), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    Icon(imageVector = Icons.Default.Login, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(if (isUrdu) "لاگ ان یا نیا اکاؤنٹ بنائیں" else "Login / Sign Up", fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
                     }
-                }
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Button(
-                    onClick = onDismiss,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .testTag("close_settings_button"),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("Done / مکمل", fontWeight = FontWeight.Bold, fontSize = 14.sp)
                 }
             }
         }
@@ -295,45 +333,7 @@ fun SettingsDialog(
 }
 
 @Composable
-private fun ThemeOptionCard(
-    title: String,
-    icon: ImageVector,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        shape = RoundedCornerShape(12.dp),
-        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-        border = if (isSelected) ButtonDefaults.outlinedButtonBorder else null,
-        modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
-            .clickable { onClick() }
-    ) {
-        Column(
-            modifier = Modifier.padding(vertical = 12.dp, horizontal = 6.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = title,
-                tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = title,
-                fontSize = 11.sp,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                color = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
-            )
-        }
-    }
-}
-
-@Composable
-private fun LanguageOptionCard(
+fun LanguageOptionCard(
     language: AppLanguage,
     title: String,
     subtitle: String,
@@ -341,18 +341,22 @@ private fun LanguageOptionCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        shape = RoundedCornerShape(12.dp),
-        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-        border = if (isSelected) ButtonDefaults.outlinedButtonBorder else null,
+    Card(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
             .clickable { onClick() }
+            .testTag("lang_option_${language.name}"),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        ),
+        border = if (isSelected) CardDefaults.outlinedCardBorder().copy(width = 2.dp) else null
     ) {
         Column(
-            modifier = Modifier.padding(vertical = 12.dp, horizontal = 6.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp, horizontal = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
                 text = title,
@@ -363,8 +367,49 @@ private fun LanguageOptionCard(
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = subtitle,
-                fontSize = 11.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                fontSize = 10.sp,
+                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+fun ThemeOptionCard(
+    title: String,
+    icon: ImageVector,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .clickable { onClick() },
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        ),
+        border = if (isSelected) CardDefaults.outlinedCardBorder().copy(width = 2.dp) else null
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 10.dp, horizontal = 6.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = title,
+                tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = title,
+                fontSize = 12.sp,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
             )
         }
     }

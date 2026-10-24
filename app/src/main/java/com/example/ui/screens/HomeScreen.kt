@@ -10,77 +10,64 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
-import com.example.R
-import com.example.data.SampleData
 import com.example.localization.AppLanguage
-import com.example.localization.Strings
+import com.example.model.FarmCrop
 import com.example.model.Farmer
-import com.example.model.FarmerStory
-import com.example.model.Post
-import com.example.model.UserType
-import com.example.ui.components.FacebookStoryTray
-import com.example.ui.components.PostCard
+import com.example.model.KhataEntry
+import com.example.model.KhataType
+import java.text.NumberFormat
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    posts: List<Post>,
-    stories: List<FarmerStory>,
     currentUser: Farmer,
-    isLoggedIn: Boolean,
-    selectedCategory: String,
+    farmCrops: List<FarmCrop>,
+    khataEntries: List<KhataEntry>,
     selectedDistrict: String,
-    searchQuery: String,
-    isSearchActive: Boolean,
     unreadNotifCount: Int,
     appLanguage: AppLanguage,
-    onCategorySelect: (String) -> Unit,
     onDistrictChange: (String) -> Unit,
-    onSearchQueryChange: (String) -> Unit,
-    onToggleSearch: (Boolean) -> Unit,
     onNotificationClick: () -> Unit,
-    onAuthClick: () -> Unit,
-    onLikeClick: (String) -> Unit,
-    onCommentClick: (Post) -> Unit,
-    onSaveClick: (String) -> Unit,
-    onStoryClick: (FarmerStory) -> Unit,
-    onCreateStoryClick: () -> Unit,
-    onOpenCreatePost: () -> Unit,
-    onOpenAskQuestion: () -> Unit,
-    onFollowClick: (String) -> Unit = {},
-    onImageClick: (Post) -> Unit = {},
+    onOpenPlantDoctor: () -> Unit,
+    onOpenMyCrops: () -> Unit,
+    onOpenCreateCrop: () -> Unit,
+    onOpenKhata: () -> Unit,
+    onOpenAddKhataEntry: () -> Unit,
+    onOpenCalendar: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     var isLocating by remember { mutableStateOf(false) }
-    var selectedProfile by remember { mutableStateOf<Farmer?>(null) }
     var weatherExpanded by remember { mutableStateOf(false) }
+
+    val isUrdu = appLanguage == AppLanguage.URDU
+    val isPashto = appLanguage == AppLanguage.PASHTO
 
     // Real Android Location Permission Request Launcher
     @SuppressLint("MissingPermission")
@@ -103,26 +90,23 @@ fun HomeScreen(
             }
 
             if (bestLocation != null) {
-                var detectedName: String? = null
                 try {
                     val geocoder = Geocoder(context, Locale.getDefault())
                     val addresses = geocoder.getFromLocation(bestLocation.latitude, bestLocation.longitude, 1)
-                    if (!addresses.isNullOrEmpty()) {
-                        val addr = addresses[0]
-                        detectedName = addr.locality ?: addr.subAdminArea ?: addr.adminArea
-                    }
-                } catch (_: Exception) {
-                    // Geocoder fallback
+                    val locality = addresses?.firstOrNull()?.locality
+                        ?: addresses?.firstOrNull()?.subAdminArea
+                        ?: addresses?.firstOrNull()?.adminArea
+                        ?: "Mardan"
+                    onDistrictChange(locality)
+                    Toast.makeText(context, if (isUrdu) "مقام: $locality" else "Location: $locality", Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    onDistrictChange("Mardan")
                 }
-
-                val finalLocality = detectedName ?: "District Lat:${"%.2f".format(bestLocation.latitude)}"
-                onDistrictChange(finalLocality)
-                Toast.makeText(context, "Location updated: $finalLocality", Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(context, "Location permission granted. Using $selectedDistrict.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, if (isUrdu) "جی پی ایس فعال کریں" else "Please enable GPS", Toast.LENGTH_SHORT).show()
             }
         } catch (e: Exception) {
-            Toast.makeText(context, "Location set to: $selectedDistrict", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Location error", Toast.LENGTH_SHORT).show()
         } finally {
             isLocating = false
         }
@@ -131,582 +115,788 @@ fun HomeScreen(
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        val fineGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
-        val coarseGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
-        if (fineGranted || coarseGranted) {
-            isLocating = true
+        val granted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        if (granted) {
             fetchRealDeviceLocation()
         } else {
-            Toast.makeText(context, "Location permission denied. You can select your district manually.", Toast.LENGTH_SHORT).show()
+            isLocating = false
+            Toast.makeText(
+                context,
+                if (isUrdu) "مقام کی اجازت درکار ہے" else "Location permission denied",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
-    // Filter posts by search query if any
-    val filteredPosts = remember(posts, searchQuery) {
-        if (searchQuery.isBlank()) posts else {
-            posts.filter { post ->
-                post.text.contains(searchQuery, ignoreCase = true) ||
-                post.author.name.contains(searchQuery, ignoreCase = true) ||
-                post.category.contains(searchQuery, ignoreCase = true) ||
-                post.district.contains(searchQuery, ignoreCase = true)
-            }
-        }
+    // Khata calculations
+    val totalExpense = remember(khataEntries) {
+        khataEntries.filter { it.type == KhataType.EXPENSE }.sumOf { it.amount }
     }
+    val totalIncome = remember(khataEntries) {
+        khataEntries.filter { it.type == KhataType.INCOME }.sumOf { it.amount }
+    }
+    val netProfit = totalIncome - totalExpense
+    val numberFormat = remember { NumberFormat.getNumberInstance(Locale.US) }
 
-    // Infinite feed count (simulates infinite social feed pagination like Facebook)
-    val infiniteCount = if (filteredPosts.isEmpty()) 0 else 60
-
-    Scaffold(
-        topBar = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surface)
+    LazyColumn(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
+        contentPadding = PaddingValues(bottom = 80.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // 1. Top App Header Bar
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                shape = RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
-                // Header: Logo + App Name on left, Search + Notifications on right
-                Row(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .statusBarsPadding()
-                        .padding(horizontal = 16.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
                 ) {
-                    // Logo + App Name
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.ic_kisaan_book_logo),
-                            contentDescription = "Kisaan Book Logo",
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(10.dp))
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = if (isUrdu) "کسان بُک" else if (isPashto) "کِسان بُک" else "Kisaan Book",
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = if (isUrdu) "کسانوں کا اپنا زرعی اور مالیاتی مرکز" else "Farmer's Agricultural & Financial Hub",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Location Pill
+                            Surface(
+                                shape = RoundedCornerShape(20.dp),
+                                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .clickable {
+                                        isLocating = true
+                                        locationPermissionLauncher.launch(
+                                            arrayOf(
+                                                Manifest.permission.ACCESS_FINE_LOCATION,
+                                                Manifest.permission.ACCESS_COARSE_LOCATION
+                                            )
+                                        )
+                                    }
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.LocationOn,
+                                        contentDescription = "Location",
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Text(
+                                        text = selectedDistrict.ifBlank { "Mardan" },
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    if (isLocating) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(12.dp),
+                                            strokeWidth = 2.dp,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
+                            }
+
+                            // Notification Icon
+                            IconButton(
+                                onClick = onNotificationClick,
+                                modifier = Modifier.testTag("home_notif_button")
+                            ) {
+                                BadgedBox(
+                                    badge = {
+                                        if (unreadNotifCount > 0) {
+                                            Badge { Text(unreadNotifCount.toString()) }
+                                        }
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Notifications,
+                                        contentDescription = "Notifications",
+                                        tint = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 2. Compact Weather Section (Today First, Dropdown for Coming Days, Weather Icons, No Humidity/Breeze)
+        item {
+            CompactWeatherCard(
+                district = selectedDistrict,
+                isUrdu = isUrdu,
+                isPashto = isPashto,
+                isExpanded = weatherExpanded,
+                onToggleExpand = { weatherExpanded = !weatherExpanded }
+            )
+        }
+
+        // 3. Feature 1: Plant Doctor / Crop Problem Scanner (Camera / Picture AI)
+        item {
+            PaddingBox {
+                FeatureHubCard(
+                    title = if (isUrdu) "پودوں کا ڈاکٹر اور بیماری کی تشخیص" else if (isPashto) "د بوټو ډاکټر او د ناروغۍ تشخیص" else "Plant Doctor & Crop Problem Scanner",
+                    subtitle = if (isUrdu) "کیمرہ سے پودے یا پتے کی تصویر لیں، فوری بیماری، علامات اور مجاز ادویات جانیں" else "Take a picture of damaged crop/leaf to instantly identify disease, symptoms, and sprays",
+                    icon = Icons.Default.CameraAlt,
+                    badgeText = if (isUrdu) "کیمرہ تشخیص" else "Camera Scanner",
+                    primaryActionText = if (isUrdu) "فصل معائنہ شروع کریں" else "Open Plant Doctor",
+                    gradientColors = listOf(Color(0xFF2E7D32), Color(0xFF1B5E20)),
+                    onClick = onOpenPlantDoctor
+                )
+            }
+        }
+
+        // 4. Feature 2: My Farm Crops Planner (Zameen-dari)
+        item {
+            PaddingBox {
+                FarmCropsHubCard(
+                    crops = farmCrops,
+                    isUrdu = isUrdu,
+                    isPashto = isPashto,
+                    onOpenAllCrops = onOpenMyCrops,
+                    onCreateCrop = onOpenCreateCrop
+                )
+            }
+        }
+
+        // 5. Feature 3: Zameen-dari Khata (Farm Expense & Income Ledger)
+        item {
+            PaddingBox {
+                KhataHubCard(
+                    netProfit = netProfit,
+                    totalExpense = totalExpense,
+                    totalIncome = totalIncome,
+                    entryCount = khataEntries.size,
+                    numberFormat = numberFormat,
+                    isUrdu = isUrdu,
+                    isPashto = isPashto,
+                    onOpenKhata = onOpenKhata,
+                    onAddEntry = onOpenAddKhataEntry
+                )
+            }
+        }
+
+        // 6. Feature 4: Pakistan Crop Calendar (Gregorian, Hijri, Pashtun/Desi)
+        item {
+            PaddingBox {
+                FeatureHubCard(
+                    title = if (isUrdu) "پاکستان زرعی کلینڈر" else if (isPashto) "د پاکستان کرنیزه جنتري" else "Pakistan Agricultural Calendar",
+                    subtitle = if (isUrdu) "عیسوی، ہجری اور پشتون/دیسی کلینڈر کے مطابق بوائی اور کٹائی کے اوقات" else "Gregorian, Hijri, and Pashtun / Desi calendar with provincial crop guides",
+                    icon = Icons.Default.CalendarMonth,
+                    badgeText = if (isUrdu) "پشتون و دیسی" else "3 Calendars",
+                    primaryActionText = if (isUrdu) "زرعی کلینڈر کھولیں" else "Open Calendar",
+                    gradientColors = listOf(Color(0xFF00796B), Color(0xFF004D40)),
+                    onClick = onOpenCalendar
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PaddingBox(content: @Composable () -> Unit) {
+    Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+        content()
+    }
+}
+
+/**
+ * Compact Weather Card:
+ * - Priority on Today's weather
+ * - Dropdown expand icon for coming days of the week
+ * - Shows sun, cloud, half sun icons
+ * - Hides humidity and gentle breeze
+ */
+@Composable
+fun CompactWeatherCard(
+    district: String,
+    isUrdu: Boolean,
+    isPashto: Boolean,
+    isExpanded: Boolean,
+    onToggleExpand: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            // Main Today Row
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onToggleExpand() },
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Weather Icon (Sun / Half Sun / Cloud)
+                    Surface(
+                        shape = CircleShape,
+                        color = Color(0xFFFFF3E0),
+                        modifier = Modifier.size(52.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.WbSunny,
+                                contentDescription = "Sunny",
+                                tint = Color(0xFFF57C00),
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
+                    }
+
+                    Column {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "24°C",
+                                style = MaterialTheme.typography.headlineMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = if (isUrdu) "آج، معتدل دھوپ" else if (isPashto) "نن، نمر لرونکی" else "Today, Sunny",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                         Text(
-                            text = Strings.appName(appLanguage),
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            text = "${district.ifBlank { "Mardan" }} • " + if (isUrdu) "فصلوں کے لیے سازگار موسم" else "Good farming conditions",
+                            style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
-
-                    // Right icons: Search + Notifications
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(
-                            onClick = { onToggleSearch(!isSearchActive) },
-                            modifier = Modifier.testTag("home_search_toggle")
-                        ) {
-                            Icon(
-                                imageVector = if (isSearchActive) Icons.Default.Close else Icons.Default.Search,
-                                contentDescription = "Search",
-                                tint = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-
-                        Box {
-                            IconButton(
-                                onClick = onNotificationClick,
-                                modifier = Modifier.testTag("home_notifications_icon")
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Notifications,
-                                    contentDescription = "Notifications",
-                                    tint = MaterialTheme.colorScheme.onSurface,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                            }
-                            if (unreadNotifCount > 0) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(10.dp)
-                                        .align(Alignment.TopEnd)
-                                        .offset(x = (-8).dp, y = 8.dp)
-                                        .clip(CircleShape)
-                                        .background(Color(0xFFD32F2F))
-                                )
-                            }
-                        }
-                    }
                 }
 
-                // Expandable Search Bar
-                AnimatedVisibility(visible = isSearchActive) {
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = onSearchQueryChange,
-                        placeholder = { Text("Search accounts, crops, problems, machinery, fertilizer...") },
-                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                        trailingIcon = {
-                            if (searchQuery.isNotEmpty()) {
-                                IconButton(onClick = { onSearchQueryChange("") }) {
-                                    Icon(Icons.Default.Clear, contentDescription = "Clear")
-                                }
-                            }
-                        },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 6.dp)
-                            .testTag("home_search_input"),
-                        shape = RoundedCornerShape(24.dp),
-                        singleLine = true
+                IconButton(onClick = onToggleExpand) {
+                    Icon(
+                        imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                        contentDescription = "Toggle Forecast",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-
-                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
             }
-        },
-        modifier = modifier
-    ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .background(MaterialTheme.colorScheme.background),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
-            contentPadding = PaddingValues(bottom = 80.dp)
-        ) {
-            // Compact, today-first visual weather card (Hides humidity/wind, shows sun/cloud icons)
-            item {
-                Card(
+
+            // Expandable Coming Days of the Week
+            AnimatedVisibility(visible = isExpanded) {
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
-                    shape = RoundedCornerShape(18.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                        .padding(top = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        // Location & Today dropdown header
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Default.LocationOn,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(Modifier.width(4.dp))
-                                Text(
-                                    text = selectedDistrict,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 13.sp
-                                )
-                            }
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .clickable { weatherExpanded = !weatherExpanded }
-                                    .padding(horizontal = 6.dp, vertical = 2.dp)
-                            ) {
-                                Text("Today", fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                                Spacer(Modifier.width(2.dp))
-                                Icon(
-                                    imageVector = if (weatherExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                                    contentDescription = "Forecast dropdown",
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                        }
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-                        // Today's main visual temperature & condition (No humidity, no wind)
+                    Text(
+                        text = if (isUrdu) "آنے والے دنوں کا موسم (Coming Days)" else if (isPashto) "د راتلونکو ورځو موسم" else "7-Day Weekly Forecast",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    val comingDays = listOf(
+                        ForecastDay(if (isUrdu) "کل (منگل)" else "Tomorrow", "25°C / 12°C", Icons.Default.WbSunny, Color(0xFFF57C00)),
+                        ForecastDay(if (isUrdu) "بدھ" else "Wednesday", "23°C / 13°C", Icons.Default.WbCloudy, Color(0xFF78909C)),
+                        ForecastDay(if (isUrdu) "جمعرات" else "Thursday", "22°C / 11°C", Icons.Default.CloudQueue, Color(0xFF5C6BC0)),
+                        ForecastDay(if (isUrdu) "جمعہ" else "Friday", "26°C / 14°C", Icons.Default.WbSunny, Color(0xFFF57C00)),
+                        ForecastDay(if (isUrdu) "ہفتہ" else "Saturday", "24°C / 12°C", Icons.Default.WbSunny, Color(0xFFF57C00)),
+                        ForecastDay(if (isUrdu) "اتوار" else "Sunday", "21°C / 10°C", Icons.Default.WbCloudy, Color(0xFF78909C))
+                    )
+
+                    comingDays.forEach { item ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(top = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                                .padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(52.dp)
-                                        .clip(CircleShape)
-                                        .background(Color(0xFFFFF3E0)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.WbSunny,
-                                        contentDescription = "Sunny",
-                                        tint = Color(0xFFF57C00),
-                                        modifier = Modifier.size(32.dp)
-                                    )
-                                }
-                                Spacer(Modifier.width(12.dp))
-                                Column {
-                                    Text("28°C", fontSize = 28.sp, fontWeight = FontWeight.ExtraBold)
-                                    Text("Sunny & clear", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                }
-                            }
-                            AssistChip(
-                                onClick = {
-                                    locationPermissionLauncher.launch(
-                                        arrayOf(
-                                            Manifest.permission.ACCESS_FINE_LOCATION,
-                                            Manifest.permission.ACCESS_COARSE_LOCATION
-                                        )
-                                    )
-                                },
-                                label = { Text(if (isLocating) "Detecting..." else "My location", fontSize = 11.sp) },
-                                leadingIcon = { Icon(Icons.Default.MyLocation, null, modifier = Modifier.size(15.dp)) }
-                            )
-                        }
-
-                        // Dropdown Coming Days of Week Forecast (Thu, Fri, Sat, Sun)
-                        AnimatedVisibility(weatherExpanded) {
-                            Column(modifier = Modifier.padding(top = 12.dp)) {
-                                HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.12f))
-                                Spacer(Modifier.height(10.dp))
-                                Text(
-                                    text = "Coming Days Forecast",
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.padding(bottom = 6.dp)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Icon(
+                                    imageVector = item.icon,
+                                    contentDescription = null,
+                                    tint = item.iconColor,
+                                    modifier = Modifier.size(20.dp)
                                 )
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    ForecastDayColumn("Thu", "30° / 17°", Icons.Default.WbSunny, Color(0xFFF57C00))
-                                    ForecastDayColumn("Fri", "27° / 16°", Icons.Default.Cloud, Color(0xFF78909C))
-                                    ForecastDayColumn("Sat", "25° / 15°", Icons.Default.WbCloudy, Color(0xFF78909C))
-                                    ForecastDayColumn("Sun", "29° / 17°", Icons.Default.WbSunny, Color(0xFFF57C00))
-                                }
+                                Text(
+                                    text = item.day,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Medium
+                                )
                             }
-                        }
-                    }
-                }
-            }
-
-            // Categorized Search Results (Accounts, Community, Market, Crops/Problems)
-            if (isSearchActive && searchQuery.isNotBlank()) {
-                item {
-                    SearchResultsPreview(
-                        query = searchQuery,
-                        allFarmers = SampleData.allFarmersList,
-                        posts = posts,
-                        onUserClick = { selectedProfile = it }
-                    )
-                }
-            }
-
-            // Facebook-style Story Tray (Horizontal scroll)
-            item {
-                FacebookStoryTray(
-                    stories = stories,
-                    currentUser = currentUser,
-                    onCreateStoryClick = onCreateStoryClick,
-                    onStoryClick = onStoryClick
-                )
-            }
-
-            // Empty state check
-            if (filteredPosts.isEmpty()) {
-                item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(40.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Icon(
-                                imageVector = Icons.Default.Feed,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(48.dp)
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "No posts found",
-                                fontWeight = FontWeight.Bold,
+                                text = item.tempRange,
+                                style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
                 }
-            } else {
-                // Infinite feed: cycles through posts like Meta apps
-                items(
-                    count = infiniteCount,
-                    key = { index -> "${filteredPosts[index % filteredPosts.size].id}_$index" }
-                ) { index ->
-                    val post = filteredPosts[index % filteredPosts.size]
-                    PostCard(
-                        post = post,
-                        appLanguage = appLanguage,
-                        onLikeClick = { onLikeClick(post.id) },
-                        onCommentClick = { onCommentClick(post) },
-                        onSaveClick = { onSaveClick(post.id) },
-                        onFollowClick = { onFollowClick(post.author.id) },
-                        onImageClick = { onImageClick(post) },
-                        onAuthorClick = { selectedProfile = post.author },
-                        modifier = Modifier.padding(horizontal = 12.dp)
+            }
+        }
+    }
+}
+
+private data class ForecastDay(
+    val day: String,
+    val tempRange: String,
+    val icon: ImageVector,
+    val iconColor: Color
+)
+
+/**
+ * Standard High-Impact Feature Hub Card
+ */
+@Composable
+fun FeatureHubCard(
+    title: String,
+    subtitle: String,
+    icon: ImageVector,
+    badgeText: String,
+    primaryActionText: String,
+    gradientColors: List<Color>,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        shape = RoundedCornerShape(22.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Brush.horizontalGradient(gradientColors))
+                .padding(20.dp)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = Color.White.copy(alpha = 0.2f)
+                    ) {
+                        Text(
+                            text = badgeText,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                        )
+                    }
+
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = Color.White.copy(alpha = 0.9f),
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White.copy(alpha = 0.88f),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                Button(
+                    onClick = onClick,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.White,
+                        contentColor = gradientColors.first()
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = primaryActionText,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Icon(
+                        imageVector = Icons.Default.ArrowForward,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             }
         }
-    }
-
-    // Friendly Meta-style Uploader Profile Preview Dialog
-    selectedProfile?.let { farmer ->
-        AlertDialog(
-            onDismissRequest = { selectedProfile = null },
-            icon = {
-                Box(
-                    modifier = Modifier
-                        .size(64.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (farmer.avatarUri != null) {
-                        AsyncImage(
-                            model = farmer.avatarUri,
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                    } else {
-                        Text(
-                            text = farmer.avatarInitials,
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
-                }
-            },
-            title = {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(farmer.name, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier.padding(top = 2.dp)
-                    ) {
-                        when (farmer.userType) {
-                            UserType.EXPERT -> {
-                                Icon(Icons.Default.Verified, null, tint = Color(0xFFD4AF37), modifier = Modifier.size(14.dp))
-                                Text("Zari-Mahir (زرعی ماہر)", color = Color(0xFFB8860B), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                            }
-                            UserType.DEALER -> {
-                                Icon(Icons.Default.Storefront, null, tint = Color(0xFF1976D2), modifier = Modifier.size(14.dp))
-                                Text("Dokandar (دوکاندار)", color = Color(0xFF1976D2), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                            }
-                            UserType.FARMER -> {
-                                Icon(Icons.Default.Eco, null, tint = Color(0xFF2E7D32), modifier = Modifier.size(14.dp))
-                                Text("Kisaan (کسان)", color = Color(0xFF2E7D32), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                            }
-                        }
-                    }
-                }
-            },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(
-                        text = "Location: ${farmer.district}",
-                        fontSize = 13.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = farmer.bio.ifBlank { "Active community member on Kisaan Book." },
-                        fontSize = 13.sp,
-                        lineHeight = 18.sp
-                    )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceAround
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("${farmer.postsCount}", fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                            Text("Posts", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("${farmer.followersCount}", fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                            Text("Followers", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("${farmer.followingCount}", fontWeight = FontWeight.Bold, fontSize = 15.sp)
-                            Text("Following", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { selectedProfile = null }) {
-                    Text("Close")
-                }
-            }
-        )
     }
 }
 
 /**
- * Categorized Search Results Preview: Accounts, Community, Market, Crops & Problems
- * Zero emojis - uses clean Material Icons
+ * Farm Crops Hub Card (Zameen-dari)
  */
 @Composable
-private fun SearchResultsPreview(
-    query: String,
-    allFarmers: List<Farmer>,
-    posts: List<Post>,
-    onUserClick: (Farmer) -> Unit
+fun FarmCropsHubCard(
+    crops: List<FarmCrop>,
+    isUrdu: Boolean,
+    isPashto: Boolean,
+    onOpenAllCrops: () -> Unit,
+    onCreateCrop: () -> Unit
 ) {
-    val q = query.trim().lowercase()
-
-    // Matching Accounts from demo list
-    val matchingAccounts = allFarmers.filter {
-        it.name.lowercase().contains(q) ||
-        it.district.lowercase().contains(q) ||
-        it.userType.code.contains(q) ||
-        it.userType.labelEn.lowercase().contains(q)
-    }.take(3)
-
-    // Matching Community topics
-    val communityTopics = listOf(
-        "Yellow Rust Treatment",
-        "Maize Fertilizer Timing",
-        "Sugarcane Borer Prevention",
-        "Drip Irrigation Advisory",
-        "Weed Spraying Conditions"
-    ).filter { it.lowercase().contains(q) || q.contains(it.substringBefore(" ").lowercase()) }.take(2)
-
-    // Matching Market items
-    val marketItems = listOf(
-        "Fakhr-e-Bhakkar Wheat Seed",
-        "Pioneer Hybrid Maize P1429",
-        "Laser Land Leveler Rental",
-        "Certified Urea & DAP Fertilizer",
-        "Crop Protection Sprayers"
-    ).filter { it.lowercase().contains(q) || q.contains(it.substringBefore(" ").lowercase()) }.take(2)
-
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp),
-        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(22.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
-            modifier = Modifier.padding(14.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Text(
-                text = "Search Results for \"$query\"",
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.Agriculture,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
 
-            // Section 1: Accounts
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Person, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
-                Spacer(Modifier.width(6.dp))
-                Text("Accounts (${matchingAccounts.size})", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    Column {
+                        Text(
+                            text = if (isUrdu) "میری فصلیں (Crop Planner)" else if (isPashto) "زما فصلونه" else "My Farm Crops",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = if (isUrdu) "${crops.size} فصلیں زیر کاشت" else "${crops.size} active crops",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                FilledTonalButton(
+                    onClick = onCreateCrop,
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(if (isUrdu) "نئی فصل" else "Add Crop", fontSize = 12.sp)
+                }
             }
-            if (matchingAccounts.isNotEmpty()) {
-                matchingAccounts.forEach { farmer ->
-                    Row(
+
+            if (crops.isEmpty()) {
+                Text(
+                    text = if (isUrdu) "ابھی کوئی فصل درج نہیں ہے۔ نئی فصل شامل کریں تاکہ کھاد اور سپرے کی شیڈولنگ مل سکے۔" else "No crops added yet. Add your crop for tailored nutrients and medicine schedules.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                crops.take(2).forEach { crop ->
+                    Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .clickable { onUserClick(farmer) }
-                            .padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                            .clickable { onOpenAllCrops() },
+                        shape = RoundedCornerShape(14.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
                     ) {
-                        Box(
+                        Column(
                             modifier = Modifier
-                                .size(34.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primaryContainer),
-                            contentAlignment = Alignment.Center
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Text(farmer.avatarInitials, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                        }
-                        Spacer(Modifier.width(8.dp))
-                        Column {
-                            Text(farmer.name, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-                            Text("${farmer.userType.labelEn} · ${farmer.district}", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "${crop.cropNameUrdu} (${crop.variety})",
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                                Text(
+                                    text = "${crop.areaAcres} " + if (isUrdu) "ایکڑ" else "Acres",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+
+                            LinearProgressIndicator(
+                                progress = { crop.progressPercent },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(8.dp)
+                                    .clip(RoundedCornerShape(4.dp)),
+                                color = MaterialTheme.colorScheme.primary,
+                                trackColor = MaterialTheme.colorScheme.surfaceVariant
+                            )
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = crop.currentStageUrdu,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = if (isUrdu) "${crop.remainingDays} دن باقی" else "${crop.remainingDays} days left",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                     }
                 }
-            } else {
-                Text("No matching accounts found.", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
-
-            // Section 2: Community Q&A
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Groups, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
-                Spacer(Modifier.width(6.dp))
-                Text("Community Q&A", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-            }
-            if (communityTopics.isNotEmpty()) {
-                communityTopics.forEach { topic ->
-                    Text("• $topic", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
-                }
-            } else {
-                Text("• ${query.replaceFirstChar { it.uppercase() }} Farmers Discussion", fontSize = 12.sp)
-            }
-
-            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
-
-            // Section 3: Market
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Storefront, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
-                Spacer(Modifier.width(6.dp))
-                Text("Marketplace", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-            }
-            if (marketItems.isNotEmpty()) {
-                marketItems.forEach { item ->
-                    Text("• $item", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface)
-                }
-            } else {
-                Text("• Seeds · Fertilizer · Farm Machinery", fontSize = 12.sp)
+            OutlinedButton(
+                onClick = onOpenAllCrops,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(if (isUrdu) "فصلوں کی مکمل فہرست و شیڈول دیکھیں" else "View All Crops & Schedules")
             }
         }
     }
 }
 
+/**
+ * Zameen-dari Khata Hub Card
+ */
 @Composable
-private fun ForecastDayColumn(
-    day: String,
-    temp: String,
-    icon: ImageVector,
-    iconTint: Color
+fun KhataHubCard(
+    netProfit: Long,
+    totalExpense: Long,
+    totalIncome: Long,
+    entryCount: Int,
+    numberFormat: NumberFormat,
+    isUrdu: Boolean,
+    isPashto: Boolean,
+    onOpenKhata: () -> Unit,
+    onAddEntry: () -> Unit
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            text = day,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = iconTint,
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(modifier = Modifier.height(2.dp))
-        Text(
-            text = temp,
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(22.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = Color(0xFFE8F5E9),
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.AccountBalanceWallet,
+                                contentDescription = null,
+                                tint = Color(0xFF2E7D32)
+                            )
+                        }
+                    }
+
+                    Column {
+                        Text(
+                            text = if (isUrdu) "زمین داری کھاتہ (Farm Ledger)" else if (isPashto) "د ځمکه دارۍ حساب" else "Zameen-dari Khata",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = if (isUrdu) "$entryCount اندراجات محفوظ" else "$entryCount recorded entries",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                FilledTonalButton(
+                    onClick = onAddEntry,
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(if (isUrdu) "نیا اندراج" else "Add Entry", fontSize = 12.sp)
+                }
+            }
+
+            // Financial Summary KPI Row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Expense Box
+                Card(
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE))
+                ) {
+                    Column(modifier = Modifier.padding(10.dp)) {
+                        Text(
+                            text = if (isUrdu) "کل خرچ" else "Total Expense",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color(0xFFC62828)
+                        )
+                        Text(
+                            text = "₨ ${numberFormat.format(totalExpense)}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFC62828),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+
+                // Income Box
+                Card(
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E9))
+                ) {
+                    Column(modifier = Modifier.padding(10.dp)) {
+                        Text(
+                            text = if (isUrdu) "کل آمدن" else "Total Income",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color(0xFF2E7D32)
+                        )
+                        Text(
+                            text = "₨ ${numberFormat.format(totalIncome)}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF2E7D32),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+
+                // Net Profit Box
+                Card(
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (netProfit >= 0) Color(0xFFE3F2FD) else Color(0xFFFFEBEE)
+                    )
+                ) {
+                    Column(modifier = Modifier.padding(10.dp)) {
+                        Text(
+                            text = if (isUrdu) "خالص نفع" else "Net Profit",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (netProfit >= 0) Color(0xFF1565C0) else Color(0xFFC62828)
+                        )
+                        Text(
+                            text = "₨ ${numberFormat.format(netProfit)}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = if (netProfit >= 0) Color(0xFF1565C0) else Color(0xFFC62828),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            }
+
+            OutlinedButton(
+                onClick = onOpenKhata,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(if (isUrdu) "مکمل کھاتہ و تفصیلات دیکھیں" else "Open Full Ledger & Reports")
+            }
+        }
     }
 }

@@ -1,5 +1,7 @@
 package com.example.ui.components
 
+import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -10,7 +12,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -50,7 +54,7 @@ fun ContactSellerSheet(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Contact Seller",
+                    text = "ڈیلر / فروخت کنندہ سے رابطہ",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -91,66 +95,129 @@ fun ContactSellerSheet(
                         maxLines = 2
                     )
                     Text(
-                        text = "Rs. ${listing.price} / ${listing.unit}",
+                        text = "₨ ${listing.price} / ${listing.unit}",
                         fontWeight = FontWeight.ExtraBold,
                         color = MaterialTheme.colorScheme.primary,
                         fontSize = 14.sp
                     )
+                    if (listing.machineryDetails != null) {
+                        Text(
+                            text = "${listing.machineryDetails.horsepower} • ${listing.machineryDetails.makeModelYear}",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Seller Info
+            // Seller Info Card with Location & Bio
             Text(
-                text = "Seller Details",
+                text = "ڈیلر و دکان کی تفصیلات (Seller Profile)",
                 fontWeight = FontWeight.SemiBold,
-                fontSize = 14.sp,
+                fontSize = 13.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(6.dp))
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
+            Card(
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = CardDefaults.outlinedCardBorder()
             ) {
-                Box(
+                Column(
                     modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer),
-                    contentAlignment = Alignment.Center
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(44.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primaryContainer),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = listing.sellerName.take(2).uppercase(),
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = listing.sellerName,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 15.sp
+                                )
+                                if (listing.isVerifiedSeller) {
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Icon(
+                                        imageVector = Icons.Default.Verified,
+                                        contentDescription = "Verified Seller",
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.LocationOn,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(2.dp))
+                                Text(
+                                    text = listing.sellerDistrict,
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+
+                    // Seller Bio
                     Text(
-                        text = listing.sellerName.take(2).uppercase(),
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
-                Spacer(modifier = Modifier.width(12.dp))
-                Column {
-                    Text(
-                        text = listing.sellerName,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
-                    )
-                    Text(
-                        text = "${listing.sellerDistrict} • ${listing.sellerPhone}",
+                        text = listing.sellerBio,
                         fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        lineHeight = 16.sp
+                    )
+
+                    Text(
+                        text = "فون نمبر: ${listing.sellerPhone}",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            // Action Buttons: Call & WhatsApp
+            // Action Buttons: Real Direct Call & Direct WhatsApp
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                // Direct Phone Call
                 Button(
                     onClick = {
-                        Toast.makeText(context, "Dialing ${listing.sellerPhone}...", Toast.LENGTH_SHORT).show()
+                        try {
+                            val cleanNumber = listing.sellerPhone.replace(Regex("[^0-9+]"), "")
+                            val dialIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$cleanNumber"))
+                            context.startActivity(dialIntent)
+                        } catch (e: Exception) {
+                            Toast.makeText(context, "کال شروع کرنے میں مسئلہ", Toast.LENGTH_SHORT).show()
+                        }
                     },
                     modifier = Modifier
                         .weight(1f)
@@ -161,12 +228,21 @@ fun ContactSellerSheet(
                 ) {
                     Icon(imageVector = Icons.Default.Call, contentDescription = "Call")
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Call Seller")
+                    Text("براہِ راست کال", fontWeight = FontWeight.Bold)
                 }
 
+                // Direct WhatsApp Message
                 Button(
                     onClick = {
-                        Toast.makeText(context, "Opening WhatsApp chat with ${listing.sellerName}...", Toast.LENGTH_SHORT).show()
+                        try {
+                            val cleanNumber = listing.sellerPhone.replace(Regex("[^0-9]"), "")
+                            val formattedNumber = if (cleanNumber.startsWith("0")) "92" + cleanNumber.substring(1) else cleanNumber
+                            val text = Uri.encode("السلام علیکم، میں نے کسان بک پر آپ کا اشتہار دیکھا برائے: ${listing.title}۔ کیا یہ ابھی دستیاب ہے؟")
+                            val waIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/$formattedNumber?text=$text"))
+                            context.startActivity(waIntent)
+                        } catch (e: Exception) {
+                            Toast.makeText(context, "واٹس ایپ کھولنے میں مسئلہ", Toast.LENGTH_SHORT).show()
+                        }
                     },
                     modifier = Modifier
                         .weight(1f)
@@ -177,39 +253,32 @@ fun ContactSellerSheet(
                 ) {
                     Icon(imageVector = Icons.Default.Chat, contentDescription = "WhatsApp")
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("WhatsApp")
+                    Text("واٹس ایپ میسج", fontWeight = FontWeight.Bold, color = Color.White)
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // Trust & Safety Notice
-            Surface(
-                shape = RoundedCornerShape(10.dp),
-                color = Color(0xFFFFF8E1),
-                modifier = Modifier.fillMaxWidth()
+            // Safety notice
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp)
             ) {
-                Row(
-                    modifier = Modifier.padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Security,
-                        contentDescription = "Safety",
-                        tint = Color(0xFFE65100),
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        text = "Safety Notice: Always inspect agricultural goods and test machinery before transferring money. Do not pay advance deposits to strangers.",
-                        fontSize = 11.sp,
-                        color = Color(0xFF5D4037),
-                        lineHeight = 15.sp
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Default.Security,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(14.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = "سامان وصول کرنے اور تسلی کرنے کے بعد رقم ادا کریں۔",
+                    fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }

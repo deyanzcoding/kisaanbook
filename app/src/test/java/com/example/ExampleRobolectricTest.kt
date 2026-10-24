@@ -97,12 +97,13 @@ class ExampleRobolectricTest {
   @Test
   fun `language switcher updates language and strings`() {
     val viewModel = KisaanBhaiViewModel()
-    assertEquals(AppLanguage.ENGLISH, viewModel.appLanguage.value)
-    assertEquals("Kisaan Book", Strings.appName(AppLanguage.ENGLISH))
-
-    viewModel.setLanguage(AppLanguage.URDU)
+    // App defaults to Urdu per user requirement
     assertEquals(AppLanguage.URDU, viewModel.appLanguage.value)
     assertEquals("کسان بک", Strings.appName(AppLanguage.URDU))
+
+    viewModel.setLanguage(AppLanguage.ENGLISH)
+    assertEquals(AppLanguage.ENGLISH, viewModel.appLanguage.value)
+    assertEquals("Kisaan Book", Strings.appName(AppLanguage.ENGLISH))
 
     viewModel.setLanguage(AppLanguage.PASHTO)
     assertEquals(AppLanguage.PASHTO, viewModel.appLanguage.value)

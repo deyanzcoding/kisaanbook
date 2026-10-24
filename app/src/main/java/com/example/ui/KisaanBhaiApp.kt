@@ -32,6 +32,7 @@ import com.example.ui.components.*
 import com.example.ui.screens.*
 import com.example.ui.theme.KisaanBookTheme
 import com.example.viewmodel.AppTab
+import com.example.viewmodel.HomeSubScreen
 import com.example.viewmodel.KisaanBhaiViewModel
 
 @Composable
@@ -41,8 +42,14 @@ fun KisaanBhaiApp(
     val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
     val appLanguage by viewModel.appLanguage.collectAsStateWithLifecycle()
     val currentTab by viewModel.currentTab.collectAsStateWithLifecycle()
+    val homeSubScreen by viewModel.homeSubScreen.collectAsStateWithLifecycle()
     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
     val isLoggedIn by viewModel.isLoggedIn.collectAsStateWithLifecycle()
+
+    val farmCrops by viewModel.farmCrops.collectAsStateWithLifecycle()
+    val khataEntries by viewModel.khataEntries.collectAsStateWithLifecycle()
+    val communityPosts by viewModel.communityPosts.collectAsStateWithLifecycle()
+    val communityFilter by viewModel.communityFilter.collectAsStateWithLifecycle()
 
     val posts by viewModel.posts.collectAsStateWithLifecycle()
     val stories by viewModel.stories.collectAsStateWithLifecycle()
@@ -57,6 +64,10 @@ fun KisaanBhaiApp(
     val selectedDistrict by viewModel.selectedDistrict.collectAsStateWithLifecycle()
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val isSearchActive by viewModel.isSearchActive.collectAsStateWithLifecycle()
+
+    val showAddKhataDialog by viewModel.showAddKhataDialog.collectAsStateWithLifecycle()
+    val showCreateCropDialog by viewModel.showCreateCropDialog.collectAsStateWithLifecycle()
+    val showCreateCommunityPostDialog by viewModel.showCreateCommunityPostDialog.collectAsStateWithLifecycle()
 
     val showCreatePostSheet by viewModel.showCreatePostSheet.collectAsStateWithLifecycle()
     val showCreateQuestionSheet by viewModel.showCreateQuestionSheet.collectAsStateWithLifecycle()
@@ -77,9 +88,14 @@ fun KisaanBhaiApp(
         notifications.count { !it.isRead }
     }
 
-    // Predictive back navigation: if not on Home, back button returns to Home
-    BackHandler(enabled = currentTab != AppTab.HOME) {
-        viewModel.setTab(AppTab.HOME)
+    // Predictive back navigation: if on a sub-screen inside Home, back returns to Home main.
+    // If on another tab, back returns to Home tab.
+    BackHandler(enabled = currentTab != AppTab.HOME || homeSubScreen != HomeSubScreen.HOME_MAIN) {
+        if (currentTab == AppTab.HOME && homeSubScreen != HomeSubScreen.HOME_MAIN) {
+            viewModel.setHomeSubScreen(HomeSubScreen.HOME_MAIN)
+        } else {
+            viewModel.setTab(AppTab.HOME)
+        }
     }
 
     KisaanBookTheme(themeMode = themeMode) {
@@ -89,10 +105,13 @@ fun KisaanBhaiApp(
                     containerColor = MaterialTheme.colorScheme.surface,
                     tonalElevation = 6.dp
                 ) {
-                    // Home (Facebook style feed)
+                    // Home (Farmer Utility Hub)
                     NavigationBarItem(
                         selected = currentTab == AppTab.HOME,
-                        onClick = { viewModel.setTab(AppTab.HOME) },
+                        onClick = {
+                            viewModel.setTab(AppTab.HOME)
+                            viewModel.setHomeSubScreen(HomeSubScreen.HOME_MAIN)
+                        },
                         icon = {
                             Icon(
                                 imageVector = if (currentTab == AppTab.HOME) Icons.Default.Home else Icons.Outlined.Home,
@@ -108,7 +127,7 @@ fun KisaanBhaiApp(
                         modifier = Modifier.testTag("nav_home")
                     )
 
-                    // Community (Q&A)
+                    // Community (Voice, Text, Photo)
                     NavigationBarItem(
                         selected = currentTab == AppTab.COMMUNITY,
                         onClick = { viewModel.setTab(AppTab.COMMUNITY) },
@@ -165,23 +184,6 @@ fun KisaanBhaiApp(
                         modifier = Modifier.testTag("nav_profile")
                     )
                 }
-            },
-            floatingActionButton = {
-                if (currentTab == AppTab.HOME || currentTab == AppTab.PROFILE) {
-                    FloatingActionButton(
-                        onClick = { viewModel.openCreatePostSheet() },
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                        shape = CircleShape,
-                        modifier = Modifier.testTag("create_post_fab")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = Strings.createPost(appLanguage),
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-                }
             }
         ) { paddingValues ->
             Box(
@@ -192,43 +194,64 @@ fun KisaanBhaiApp(
                 Crossfade(targetState = currentTab, label = "tab_transition") { tab ->
                     when (tab) {
                         AppTab.HOME -> {
-                            HomeScreen(
-                                posts = posts,
-                                stories = stories,
-                                currentUser = currentUser,
-                                isLoggedIn = isLoggedIn,
-                                selectedCategory = selectedCategory,
-                                selectedDistrict = selectedDistrict,
-                                searchQuery = searchQuery,
-                                isSearchActive = isSearchActive,
-                                unreadNotifCount = unreadNotifCount,
-                                appLanguage = appLanguage,
-                                onCategorySelect = { viewModel.setCategoryFilter(it) },
-                                onDistrictChange = { viewModel.setDetectedLocation(it) },
-                                onSearchQueryChange = { viewModel.setSearchQuery(it) },
-                                onToggleSearch = { viewModel.toggleSearchActive(it) },
-                                onNotificationClick = { viewModel.setTab(AppTab.NOTIFICATIONS) },
-                                onAuthClick = { viewModel.openAuth(isLogin = true) },
-                                onLikeClick = { viewModel.toggleLike(it) },
-                                onCommentClick = { viewModel.openComments(it) },
-                                onSaveClick = { viewModel.toggleSave(it) },
-                                onStoryClick = { viewModel.openStory(it) },
-                                onCreateStoryClick = { viewModel.openCreateStory() },
-                                onOpenCreatePost = { viewModel.openCreatePostSheet() },
-                                onOpenAskQuestion = { viewModel.openCreateQuestionSheet() },
-                                onFollowClick = { viewModel.toggleFollow(it) },
-                                onImageClick = { viewModel.openFullscreenPost(it) }
-                            )
+                            when (homeSubScreen) {
+                                HomeSubScreen.HOME_MAIN -> {
+                                    HomeScreen(
+                                        currentUser = currentUser,
+                                        farmCrops = farmCrops,
+                                        khataEntries = khataEntries,
+                                        selectedDistrict = selectedDistrict,
+                                        unreadNotifCount = unreadNotifCount,
+                                        appLanguage = appLanguage,
+                                        onDistrictChange = { viewModel.setDetectedLocation(it) },
+                                        onNotificationClick = { viewModel.setTab(AppTab.NOTIFICATIONS) },
+                                        onOpenPlantDoctor = { viewModel.setHomeSubScreen(HomeSubScreen.PLANT_DOCTOR) },
+                                        onOpenMyCrops = { viewModel.setHomeSubScreen(HomeSubScreen.MY_CROPS) },
+                                        onOpenCreateCrop = { viewModel.openCreateCropDialog() },
+                                        onOpenKhata = { viewModel.setHomeSubScreen(HomeSubScreen.KHATA) },
+                                        onOpenAddKhataEntry = { viewModel.openAddKhataDialog() },
+                                        onOpenCalendar = { viewModel.setHomeSubScreen(HomeSubScreen.CALENDAR) }
+                                    )
+                                }
+                                HomeSubScreen.PLANT_DOCTOR -> {
+                                    PlantDoctorScreen(
+                                        onBackClick = { viewModel.setHomeSubScreen(HomeSubScreen.HOME_MAIN) }
+                                    )
+                                }
+                                HomeSubScreen.MY_CROPS -> {
+                                    MyCropsScreen(
+                                        crops = farmCrops,
+                                        onAddCropClick = { viewModel.openCreateCropDialog() },
+                                        onBackClick = { viewModel.setHomeSubScreen(HomeSubScreen.HOME_MAIN) }
+                                    )
+                                }
+                                HomeSubScreen.KHATA -> {
+                                    KhataScreen(
+                                        entries = khataEntries,
+                                        crops = farmCrops,
+                                        onAddEntryClick = { viewModel.openAddKhataDialog() },
+                                        onDeleteEntry = { viewModel.deleteKhataEntry(it) },
+                                        onBackClick = { viewModel.setHomeSubScreen(HomeSubScreen.HOME_MAIN) }
+                                    )
+                                }
+                                HomeSubScreen.CALENDAR -> {
+                                    CalendarScreen(
+                                        onBackClick = { viewModel.setHomeSubScreen(HomeSubScreen.HOME_MAIN) }
+                                    )
+                                }
+                            }
                         }
                         AppTab.COMMUNITY -> {
                             CommunityScreen(
-                                questions = questions,
-                                selectedCategory = selectedCategory,
-                                onCategorySelect = { viewModel.setCategoryFilter(it) },
-                                onAskQuestionClick = { viewModel.openCreateQuestionSheet() },
-                                onAddAnswer = { qId, text -> viewModel.addAnswer(qId, text) },
-                                onMarkAccepted = { qId, aId -> viewModel.markAcceptedAnswer(qId, aId) },
-                                onUpvoteAnswer = { qId, aId -> viewModel.upvoteAnswer(qId, aId) }
+                                communityPosts = communityPosts,
+                                selectedMediaFilter = communityFilter,
+                                onMediaFilterSelect = { viewModel.setCommunityFilter(it) },
+                                onCreatePostClick = { viewModel.openCreateCommunityPost() },
+                                onToggleLike = { viewModel.toggleCommunityPostLike(it) },
+                                onAddComment = { pId, text -> viewModel.addCommunityComment(pId, text) },
+                                onAddReply = { pId, cId, text -> viewModel.addCommunityReply(pId, cId, text) },
+                                onToggleCommentLike = { pId, cId -> viewModel.toggleCommunityCommentLike(pId, cId) },
+                                onToggleReplyLike = { pId, cId, rId -> viewModel.toggleCommunityReplyLike(pId, cId, rId) }
                             )
                         }
                         AppTab.MARKETPLACE -> {
@@ -271,7 +294,35 @@ fun KisaanBhaiApp(
             }
         }
 
-        // Story Viewer Modal (Zoomable, viewers sheet, like & reply)
+        // Add Khata Entry Dialog
+        if (showAddKhataDialog) {
+            AddKhataEntryDialog(
+                crops = farmCrops,
+                language = appLanguage,
+                onDismiss = { viewModel.closeAddKhataDialog() },
+                onSave = { entry -> viewModel.addKhataEntry(entry) }
+            )
+        }
+
+        // Create Farm Crop Dialog
+        if (showCreateCropDialog) {
+            CreateCropDialog(
+                userDistrict = selectedDistrict,
+                onDismiss = { viewModel.closeCreateCropDialog() },
+                onCropCreated = { newCrop -> viewModel.addFarmCrop(newCrop) }
+            )
+        }
+
+        // Create Community Post Dialog (Text, Voice, Picture)
+        if (showCreateCommunityPostDialog) {
+            CreateCommunityPostDialog(
+                currentUser = currentUser,
+                onDismiss = { viewModel.closeCreateCommunityPost() },
+                onSubmitPost = { newPost -> viewModel.addCommunityPost(newPost) }
+            )
+        }
+
+        // Story Viewer Modal
         activeStory?.let { story ->
             StoryViewerDialog(
                 stories = stories,
@@ -282,7 +333,7 @@ fun KisaanBhaiApp(
             )
         }
 
-        // Create Story Dialog (Picture, Video, Text)
+        // Create Story Dialog
         if (showCreateStoryDialog) {
             CreateStoryDialog(
                 currentUser = currentUser,
@@ -293,7 +344,7 @@ fun KisaanBhaiApp(
             )
         }
 
-        // Fullscreen Post Viewer Modal (Facebook style)
+        // Fullscreen Post Viewer Modal
         activeFullscreenPost?.let { post ->
             FullscreenPostViewer(
                 post = post,
@@ -352,8 +403,6 @@ fun KisaanBhaiApp(
                 onDismiss = { viewModel.closeContactSeller() }
             )
         }
-
-
 
         if (showAgriGuidesDialog) {
             AgriGuidesDialog(

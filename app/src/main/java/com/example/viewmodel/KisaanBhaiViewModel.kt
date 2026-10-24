@@ -18,10 +18,21 @@ enum class AppTab(val title: String, val titleUrdu: String) {
     PROFILE("Profile", "پروفائل")
 }
 
+enum class HomeSubScreen {
+    HOME_MAIN,
+    PLANT_DOCTOR,
+    MY_CROPS,
+    KHATA,
+    CALENDAR
+}
+
 class KisaanBhaiViewModel : ViewModel() {
 
     private val _currentTab = MutableStateFlow(AppTab.HOME)
     val currentTab: StateFlow<AppTab> = _currentTab.asStateFlow()
+
+    private val _homeSubScreen = MutableStateFlow(HomeSubScreen.HOME_MAIN)
+    val homeSubScreen: StateFlow<HomeSubScreen> = _homeSubScreen.asStateFlow()
 
     private val _currentUser = MutableStateFlow(SampleData.currentUser)
     val currentUser: StateFlow<Farmer> = _currentUser.asStateFlow()
@@ -32,8 +43,33 @@ class KisaanBhaiViewModel : ViewModel() {
     private val _themeMode = MutableStateFlow(ThemeMode.SYSTEM)
     val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
 
-    private val _appLanguage = MutableStateFlow(AppLanguage.ENGLISH)
+    // Default language is Urdu per requirement
+    private val _appLanguage = MutableStateFlow(AppLanguage.URDU)
     val appLanguage: StateFlow<AppLanguage> = _appLanguage.asStateFlow()
+
+    // Farm Crops & Management
+    private val _farmCrops = MutableStateFlow(SampleData.initialFarmCrops)
+    val farmCrops: StateFlow<List<FarmCrop>> = _farmCrops.asStateFlow()
+
+    // Zameen-dari Khata Ledger
+    private val _khataEntries = MutableStateFlow(SampleData.initialKhataEntries)
+    val khataEntries: StateFlow<List<KhataEntry>> = _khataEntries.asStateFlow()
+
+    // Community Posts (Text, Voice, Picture)
+    private val _communityPosts = MutableStateFlow(SampleData.initialCommunityPosts)
+    val communityPosts: StateFlow<List<CommunityPost>> = _communityPosts.asStateFlow()
+
+    private val _communityFilter = MutableStateFlow("All")
+    val communityFilter: StateFlow<String> = _communityFilter.asStateFlow()
+
+    private val _showAddKhataDialog = MutableStateFlow(false)
+    val showAddKhataDialog: StateFlow<Boolean> = _showAddKhataDialog.asStateFlow()
+
+    private val _showCreateCropDialog = MutableStateFlow(false)
+    val showCreateCropDialog: StateFlow<Boolean> = _showCreateCropDialog.asStateFlow()
+
+    private val _showCreateCommunityPostDialog = MutableStateFlow(false)
+    val showCreateCommunityPostDialog: StateFlow<Boolean> = _showCreateCommunityPostDialog.asStateFlow()
 
     private val _posts = MutableStateFlow(SampleData.initialPosts)
     val posts: StateFlow<List<Post>> = _posts.asStateFlow()
@@ -741,4 +777,145 @@ class KisaanBhaiViewModel : ViewModel() {
     }
     fun closeAuth() { _showAuthDialog.value = false }
     fun setAuthMode(isLogin: Boolean) { _authIsLoginMode.value = isLogin }
+
+    // ==========================================
+    // FARM UTILITY & HOME SUB-SCREEN ACTIONS
+    // ==========================================
+    fun setHomeSubScreen(subScreen: HomeSubScreen) {
+        _homeSubScreen.value = subScreen
+    }
+
+    fun openCreateCropDialog() { _showCreateCropDialog.value = true }
+    fun closeCreateCropDialog() { _showCreateCropDialog.value = false }
+
+    fun addFarmCrop(crop: FarmCrop) {
+        _farmCrops.update { listOf(crop) + it }
+        _showCreateCropDialog.value = false
+    }
+
+    fun deleteFarmCrop(cropId: String) {
+        _farmCrops.update { it.filterNot { c -> c.id == cropId } }
+    }
+
+    fun openAddKhataDialog() { _showAddKhataDialog.value = true }
+    fun closeAddKhataDialog() { _showAddKhataDialog.value = false }
+
+    fun addKhataEntry(entry: KhataEntry) {
+        _khataEntries.update { listOf(entry) + it }
+        _showAddKhataDialog.value = false
+    }
+
+    fun deleteKhataEntry(entryId: String) {
+        _khataEntries.update { it.filterNot { e -> e.id == entryId } }
+    }
+
+    // ==========================================
+    // COMMUNITY POSTS ACTIONS (Text, Voice, Picture)
+    // ==========================================
+    fun setCommunityFilter(filter: String) {
+        _communityFilter.value = filter
+    }
+
+    fun openCreateCommunityPost() { _showCreateCommunityPostDialog.value = true }
+    fun closeCreateCommunityPost() { _showCreateCommunityPostDialog.value = false }
+
+    fun addCommunityPost(post: CommunityPost) {
+        _communityPosts.update { listOf(post) + it }
+        _showCreateCommunityPostDialog.value = false
+    }
+
+    fun toggleCommunityPostLike(postId: String) {
+        _communityPosts.update { list ->
+            list.map { post ->
+                if (post.id == postId) {
+                    val newIsLiked = !post.isLiked
+                    val newCount = if (newIsLiked) post.likeCount + 1 else maxOf(0, post.likeCount - 1)
+                    post.copy(isLiked = newIsLiked, likeCount = newCount)
+                } else post
+            }
+        }
+    }
+
+    fun addCommunityComment(postId: String, text: String) {
+        if (text.isBlank()) return
+        val newComment = Comment(
+            id = "c_${System.currentTimeMillis()}",
+            authorName = _currentUser.value.name,
+            authorDistrict = _currentUser.value.district,
+            text = text.trim(),
+            timestamp = "Just now",
+            isExpert = _currentUser.value.isExpert,
+            authorType = _currentUser.value.userType
+        )
+        _communityPosts.update { list ->
+            list.map { post ->
+                if (post.id == postId) {
+                    post.copy(comments = post.comments + newComment)
+                } else post
+            }
+        }
+    }
+
+    fun addCommunityReply(postId: String, commentId: String, text: String) {
+        if (text.isBlank()) return
+        val newReply = ReplyComment(
+            id = "r_${System.currentTimeMillis()}",
+            authorName = _currentUser.value.name,
+            authorType = _currentUser.value.userType,
+            authorDistrict = _currentUser.value.district,
+            text = text.trim(),
+            timestamp = "Just now"
+        )
+        _communityPosts.update { list ->
+            list.map { post ->
+                if (post.id == postId) {
+                    val updatedComments = post.comments.map { comment ->
+                        if (comment.id == commentId) {
+                            comment.copy(replies = comment.replies + newReply)
+                        } else comment
+                    }
+                    post.copy(comments = updatedComments)
+                } else post
+            }
+        }
+    }
+
+    fun toggleCommunityCommentLike(postId: String, commentId: String) {
+        _communityPosts.update { list ->
+            list.map { post ->
+                if (post.id == postId) {
+                    val updatedComments = post.comments.map { comment ->
+                        if (comment.id == commentId) {
+                            val newLiked = !comment.isLiked
+                            val newCount = if (newLiked) comment.likeCount + 1 else maxOf(0, comment.likeCount - 1)
+                            comment.copy(isLiked = newLiked, likeCount = newCount)
+                        } else comment
+                    }
+                    post.copy(comments = updatedComments)
+                } else post
+            }
+        }
+    }
+
+    fun toggleCommunityReplyLike(postId: String, commentId: String, replyId: String) {
+        _communityPosts.update { list ->
+            list.map { post ->
+                if (post.id == postId) {
+                    val updatedComments = post.comments.map { comment ->
+                        if (comment.id == commentId) {
+                            val updatedReplies = comment.replies.map { reply ->
+                                if (reply.id == replyId) {
+                                    val newLiked = !reply.isLiked
+                                    val newCount = if (newLiked) reply.likeCount + 1 else maxOf(0, reply.likeCount - 1)
+                                    reply.copy(isLiked = newLiked, likeCount = newCount)
+                                } else reply
+                            }
+                            comment.copy(replies = updatedReplies)
+                        } else comment
+                    }
+                    post.copy(comments = updatedComments)
+                } else post
+            }
+        }
+    }
 }

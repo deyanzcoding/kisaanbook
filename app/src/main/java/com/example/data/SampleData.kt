@@ -647,8 +647,9 @@ object SampleData {
             price = 5200,
             unit = "فی 50 کلو بوری",
             sellerName = "Shafiq Ahmad",
-            sellerDistrict = "Mardan",
+            sellerDistrict = "Mardan, KP",
             sellerPhone = "03001234567",
+            sellerBio = "پنجاب و خیبر سیڈ کارپوریشن کے تصدیق شدہ بیج ڈیلر۔ مردان میں 15 سالہ کسان خدمت۔",
             description = "پنجاب سیڈ کارپوریشن کا تصدیق شدہ اور جراثیم کش دوا لگا فخر بھکر گندم کا بیج۔ اگاؤ کی شرح 92 فیصد سے زائد ہے۔",
             imageRes = R.drawable.img_wheat_field,
             timestamp = "1d",
@@ -662,8 +663,9 @@ object SampleData {
             price = 14500,
             unit = "فی پیکٹ",
             sellerName = "Hasnain Raza",
-            sellerDistrict = "Gujranwala",
+            sellerDistrict = "Gujranwala, Punjab",
             sellerPhone = "03217654321",
+            sellerBio = "رجسٹرڈ زرعی مرکز گوجرانوالہ۔ اصلی بیج اور جدید ادویات کی گارنٹی۔",
             description = "اصل درآمد شدہ پائنیر مکئی بیج، زیادہ پیداوار اور سُنڈی کے خلاف قوت مدافعت رکھنے والی قسم۔",
             imageRes = R.drawable.img_maize_harvest,
             timestamp = "2d",
@@ -672,18 +674,45 @@ object SampleData {
         ),
         MarketplaceListing(
             id = "mkt_3",
-            title = "زرعی لیزر لیولر برائے کرایہ و خدمات",
-            category = "Machinery",
-            price = 1800,
-            unit = "فی گھنٹہ",
+            title = "Millat Massey Ferguson 385 (85 HP)",
+            category = "Tractor & Machinery",
+            price = 3250000,
+            unit = "مکمل ٹریکٹر",
             sellerName = "Tariq Aji",
-            sellerDistrict = "Sheikhupura",
+            sellerDistrict = "Sheikhupura, Punjab",
             sellerPhone = "03339876543",
-            description = "جدید ٹاپ کون لیزر لیولر سے کھیت کی 100 فیصد ہمواری۔ پانی کی بچت اور بیج کا یکساں اگاؤ۔",
+            sellerBio = "ٹریکٹر و زرعی مشینری شوروم شیخوپورہ۔ آسان اقساط اور نقد لین دین۔",
+            description = "ملت ٹریکٹرز ماڈل 2022، صرف 1400 گھنٹے چلا ہوا، بالکل اصل کنڈیشن، نئے ٹائر، انجن و گیئر سیل پیک۔",
             imageRes = null,
             timestamp = "3d",
             isVerifiedSeller = true,
-            availableQuantity = "2 یونٹس دستیاب"
+            availableQuantity = "1 یونٹ دستیاب",
+            machineryDetails = MachineryDetails(
+                makeModelYear = "MF 385 - 2022",
+                horsepower = "85 HP",
+                condition = "Used - Excellent"
+            )
+        ),
+        MarketplaceListing(
+            id = "mkt_4",
+            title = "Fiat New Holland 480 (55 HP)",
+            category = "Tractor & Machinery",
+            price = 1950000,
+            unit = "مکمل ٹریکٹر",
+            sellerName = "Bashir Ahmad",
+            sellerDistrict = "Multan, Punjab",
+            sellerPhone = "03015554321",
+            sellerBio = "ملتان زرعی مشینری منڈی، ٹریکٹرز اور ہارویسٹرز کی بااعتماد خرید و فروخت۔",
+            description = "فیٹ 480 ماڈل 2019، بہترین کام کرنے کی حالت میں، کم ڈیزل خرچ اور ڈرائیونگ میں بہترین۔",
+            imageRes = null,
+            timestamp = "4d",
+            isVerifiedSeller = true,
+            availableQuantity = "1 یونٹ دستیاب",
+            machineryDetails = MachineryDetails(
+                makeModelYear = "Fiat 480 - 2019",
+                horsepower = "55 HP",
+                condition = "Used - Fair"
+            )
         )
     )
 
@@ -790,4 +819,286 @@ object SampleData {
             readTime = "4 min read"
         )
     )
+
+    // ==========================================
+    // INITIAL MY FARM CROPS (Zameen-dari)
+    // ==========================================
+    val initialFarmCrops = listOf(
+        FarmCrop(
+            id = "crop_wheat_1",
+            cropName = "Wheat",
+            cropNameUrdu = "گندم",
+            variety = "Fakhr-e-Bhakkar (فخر بھکر)",
+            sowingDate = "15 Nov 2024",
+            areaAcres = 4.5,
+            soilType = "Loamy / چکنی مٹی",
+            district = "Mardan",
+            province = "KP",
+            currentStage = "Booting / Grain Filling",
+            currentStageUrdu = "گوبھ اور دانہ بھرائی مرحلہ",
+            durationDays = 150,
+            daysElapsed = 95,
+            weatherTips = listOf(
+                "موجودہ نمی اور درجہ حرارت زرد زنگ کے لیے موزوں ہے، روزانہ پتوں کا معائنہ کریں۔",
+                "تیز ہوا کے دوران آبپاشی سے گریز کریں تاکہ فصل گرنے سے محفوظ رہے۔",
+                "دھوپ نکلنے پر پوٹاش اور زنک کا فولیر سپرے دانوں کا وزن 18 فیصد بڑھاتا ہے۔"
+            ),
+            nutrientsSchedule = listOf(
+                NutrientItem(
+                    name = "DAP (Di-ammonium Phosphate)",
+                    nameUrdu = "ڈی اے پی کھاد",
+                    stage = "بوائی کے وقت (Basal Dose)",
+                    dosage = "1 بوری فی ایکڑ",
+                    purpose = "جڑوں کی مضبوطی اور پودے کا ابتدائی پھیلاؤ",
+                    recommendedDealers = listOf("Shafiq Ahmad (Mardan)", "Hasnain Raza (Gujranwala)")
+                ),
+                NutrientItem(
+                    name = "Urea + Potash (SOP)",
+                    nameUrdu = "یوریا اور پوٹاش",
+                    stage = "پہلے و دوسرے پانی پر (Crown Root & Tillering)",
+                    dosage = "1 بوری یوریا + 12 کلو پوٹاش فی ایکڑ",
+                    purpose = "شاخوں میں اضافہ اور گوبھ کی تیاری",
+                    recommendedDealers = listOf("Tariq Aji", "Shafiq Ahmad")
+                ),
+                NutrientItem(
+                    name = "Liquid Boron & Zinc",
+                    nameUrdu = "بوران اور زنک فولیر سپرے",
+                    stage = "سٹے نکلتے وقت (Heading stage)",
+                    dosage = "250 ملی لیٹر فی 100 لیٹر پانی",
+                    purpose = "پولینیشن میں بہتری اور دانوں کا مکمل بننا",
+                    recommendedDealers = listOf("Shafiq Ahmad (Mardan)")
+                )
+            ),
+            medicineSchedule = listOf(
+                MedicineItem(
+                    diseaseOrPest = "Yellow Rust (Puccinia striiformis)",
+                    diseaseOrPestUrdu = "زرد زنگ (پیلا زنگ)",
+                    sprayName = "Nativo (Tebuconazole + Trifloxystrobin)",
+                    timing = "علامات ظاہر ہوتے ہی یا نمی بڑھنے پر",
+                    dosage = "65 گرام فی 100 لیٹر پانی",
+                    recommendedDealers = listOf("Shafiq Ahmad (Mardan)", "Hasnain Raza")
+                ),
+                MedicineItem(
+                    diseaseOrPest = "Aphid / Wheat Louse",
+                    diseaseOrPestUrdu = "گندم کا سُست تیلہ",
+                    sprayName = "Imidacloprid 200 SL",
+                    timing = "فروری کے آخری ہفتے میں اگر تیلہ 10 فی سٹا ہو",
+                    dosage = "200 ملی لیٹر فی ایکڑ",
+                    recommendedDealers = listOf("Shafiq Ahmad")
+                )
+            ),
+            estimatedYield = "48–52 من فی ایکڑ"
+        ),
+        FarmCrop(
+            id = "crop_maize_2",
+            cropName = "Hybrid Maize",
+            cropNameUrdu = "ہائبرڈ مکئی",
+            variety = "Pioneer P1429 (بہاریہ)",
+            sowingDate = "10 Feb 2025",
+            areaAcres = 2.0,
+            soilType = "Sandy Loam / ریتلی میرا",
+            district = "Swat",
+            province = "KP",
+            currentStage = "Early Vegetative (V4)",
+            currentStageUrdu = "ابتدائی پودے کا پھیلاؤ (4 پتے)",
+            durationDays = 110,
+            daysElapsed = 25,
+            weatherTips = listOf(
+                "بہاریہ مکئی کو ابتدائی دنوں میں کورے اور رات کی سردی سے بچائیں۔",
+                "فال آرمی ورم (لشکری سنڈی) کے ابتدائی نشانات دل پر چیک کریں۔"
+            ),
+            nutrientsSchedule = listOf(
+                NutrientItem(
+                    name = "Nitrophos + Zinc",
+                    nameUrdu = "نائٹروفاس اور زنک",
+                    stage = "بوائی کے وقت",
+                    dosage = "1.5 بوری نائٹروفاس فی ایکڑ",
+                    purpose = "ابتدائی پودے کی مضبوطی",
+                    recommendedDealers = listOf("Hasnain Raza", "Shafiq Ahmad")
+                )
+            ),
+            medicineSchedule = listOf(
+                MedicineItem(
+                    diseaseOrPest = "Fall Armyworm (Spodoptera frugiperda)",
+                    diseaseOrPestUrdu = "لشکری سنڈی / فال آرمی ورم",
+                    sprayName = "Emamectin Benzoate 1.9 EC",
+                    timing = "پتوں پر سوراخ نظر آتے ہی دل میں سپرے کریں",
+                    dosage = "200 ملی لیٹر فی ایکڑ",
+                    recommendedDealers = listOf("Hasnain Raza")
+                )
+            ),
+            estimatedYield = "85–95 من فی ایکڑ"
+        )
+    )
+
+    // ==========================================
+    // INITIAL ZAMEEN-DARI KHATA ENTRIES
+    // ==========================================
+    val initialKhataEntries = listOf(
+        KhataEntry(
+            id = "khata_1",
+            cropId = "crop_wheat_1",
+            cropName = "Wheat",
+            type = KhataType.EXPENSE,
+            category = "Seed",
+            amount = 20800,
+            description = "4 بوری فخر بھکر تصدیق شدہ بیج",
+            date = "15 Nov 2024"
+        ),
+        KhataEntry(
+            id = "khata_2",
+            cropId = "crop_wheat_1",
+            cropName = "Wheat",
+            type = KhataType.EXPENSE,
+            category = "Land Prep",
+            amount = 14500,
+            description = "لیزر لیولر اور روٹاویٹر کرایہ (4.5 ایکڑ)",
+            date = "12 Nov 2024"
+        ),
+        KhataEntry(
+            id = "khata_3",
+            cropId = "crop_wheat_1",
+            cropName = "Wheat",
+            type = KhataType.EXPENSE,
+            category = "Fertilizer",
+            amount = 49500,
+            description = "4 بوری ڈی اے پی اور 2 بوری یوریا",
+            date = "28 Nov 2024"
+        ),
+        KhataEntry(
+            id = "khata_4",
+            cropId = "crop_wheat_1",
+            cropName = "Wheat",
+            type = KhataType.EXPENSE,
+            category = "Spray / Medicine",
+            amount = 6200,
+            description = "زرد زنگ سے بچاؤ کا حفاظتی فنجی سائیڈ سپرے",
+            date = "14 Jan 2025"
+        ),
+        KhataEntry(
+            id = "khata_5",
+            cropId = "crop_maize_2",
+            cropName = "Hybrid Maize",
+            type = KhataType.EXPENSE,
+            category = "Seed",
+            amount = 29000,
+            description = "پائنیر ہائبرڈ مکئی بیج 2 پیکٹ",
+            date = "10 Feb 2025"
+        ),
+        KhataEntry(
+            id = "khata_6",
+            cropId = "crop_wheat_1",
+            cropName = "Wheat",
+            type = KhataType.INCOME,
+            category = "Harvest Sale",
+            amount = 185000,
+            description = "پچھلے سیزن کی گندم اور بھوسا فروخت",
+            date = "05 Dec 2024"
+        )
+    )
+
+    // ==========================================
+    // INITIAL COMMUNITY POSTS (Voice, Text, Image)
+    // ==========================================
+    val initialCommunityPosts = listOf(
+        CommunityPost(
+            id = "comm_post_1",
+            author = currentUser,
+            text = "السلام علیکم کسان بھائیو! گندم اب 95 دن کی ہو چکی ہے اور گوبھ کے مرحلے پر ہے۔ کل شام پتوں پر ہلکی پیلی دھاریاں نظر آئیں۔ کیا یہ زرد زنگ کے آثار ہیں؟ اس مرحلے پر کون سا فنجی سائیڈ سب سے محفوظ رہے گا؟",
+            voiceUri = null,
+            voiceDurationSeconds = 18,
+            imageRes = R.drawable.img_wheat_field,
+            category = "Farmer problems",
+            district = "Mardan, KP",
+            timestamp = "2h ago",
+            likeCount = 14,
+            isLiked = false,
+            comments = listOf(
+                Comment(
+                    id = "c_1",
+                    authorName = "Ahmad Ali",
+                    authorDistrict = "Faisalabad",
+                    text = "خورشید بھائی، یہ ابتدائی زرد زنگ (Yellow Rust) کے واضح اثرات ہیں۔ موسم میں نمی زیادہ ہے۔ فوری طور پر نیٹیوو یا ٹیبوکونازول کا سپرے کریں۔ تاخیر سے دانہ کمزور پڑ جائے گا۔",
+                    timestamp = "1h ago",
+                    isExpert = true,
+                    authorType = UserType.EXPERT,
+                    isLiked = true,
+                    likeCount = 8,
+                    replies = listOf(
+                        ReplyComment(
+                            id = "r_1",
+                            authorName = "Khursheed Ahmad",
+                            authorType = UserType.FARMER,
+                            authorDistrict = "Mardan",
+                            text = "شکریہ احمد علی صاحب! کیا سپرے کے ساتھ پوٹاش کھاد بھی ملا سکتے ہیں؟",
+                            timestamp = "45m ago",
+                            isLiked = false,
+                            likeCount = 2
+                        ),
+                        ReplyComment(
+                            id = "r_2",
+                            authorName = "Ahmad Ali",
+                            authorType = UserType.EXPERT,
+                            authorDistrict = "Faisalabad",
+                            text = "جی بالکل، این پی کے یا مائع پوٹاش سپرے کے ساتھ ملائی جا سکتی ہے بشرطیکہ پانی صاف ہو۔",
+                            timestamp = "30m ago",
+                            isLiked = true,
+                            likeCount = 4
+                        )
+                    )
+                ),
+                Comment(
+                    id = "c_2",
+                    authorName = "Shafiq Ahmad",
+                    authorDistrict = "Mardan",
+                    text = "ہماری دکان پر اصلی بائر کی نیٹیوو دستیاب ہے۔ کسان بھائیوں کو مناسب ریٹ پر دیں گے۔",
+                    timestamp = "40m ago",
+                    isExpert = false,
+                    authorType = UserType.DEALER,
+                    isLiked = false,
+                    likeCount = 3
+                )
+            )
+        ),
+        CommunityPost(
+            id = "comm_post_2",
+            author = farmerHussainShah,
+            text = "سوات میں بہاریہ مکئی کی بوائی کے بعد پہلے پانی کی احتیاطی تدابیر۔ آواز میں مکمل تفصیل سنیں۔",
+            voiceUri = "sample_voice_2",
+            voiceDurationSeconds = 32,
+            imageRes = R.drawable.img_maize_harvest,
+            category = "Zari mahir suggestions",
+            district = "Swat, KP",
+            timestamp = "4h ago",
+            likeCount = 21,
+            isLiked = true,
+            comments = listOf(
+                Comment(
+                    id = "c_3",
+                    authorName = "Hesta Rahman",
+                    authorDistrict = "Charsadda",
+                    text = "بہت زبردست رہنمائی۔ ہم بھی چارسدہ میں اسی طریقے پر عمل کر رہے ہیں۔",
+                    timestamp = "3h ago",
+                    authorType = UserType.FARMER,
+                    isLiked = false,
+                    likeCount = 5
+                )
+            )
+        ),
+        CommunityPost(
+            id = "comm_post_3",
+            author = farmerRasoolKhan,
+            text = "صوابی میں تمباکو کی پنیری منتقل کرنے کا بہترین وقت اور کھاد کا درست تناسب۔",
+            voiceUri = null,
+            voiceDurationSeconds = 0,
+            imageRes = null,
+            category = "Farmer problems",
+            district = "Swabi, KP",
+            timestamp = "6h ago",
+            likeCount = 9,
+            isLiked = false,
+            comments = emptyList()
+        )
+    )
 }
+

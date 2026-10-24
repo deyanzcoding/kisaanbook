@@ -182,8 +182,12 @@ fun ProfileScreen(
                         }
                         Spacer(modifier = Modifier.height(6.dp))
 
-                        // Bio paragraph with See More / See Less toggle
-                        Column(modifier = Modifier.fillMaxWidth()) {
+                        // Compact Bio paragraph: Clicking the bio itself toggles show more/show less
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { isBioExpanded = !isBioExpanded }
+                        ) {
                             Text(
                                 text = farmer.bio,
                                 fontSize = 13.sp,
@@ -192,17 +196,13 @@ fun ProfileScreen(
                                 maxLines = if (isBioExpanded) Int.MAX_VALUE else 2,
                                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                             )
-                            Spacer(modifier = Modifier.height(4.dp))
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .clickable { isBioExpanded = !isBioExpanded }
-                                    .padding(vertical = 2.dp)
+                                modifier = Modifier.padding(top = 2.dp)
                             ) {
                                 Text(
-                                    text = if (isBioExpanded) "See less" else "See more details",
-                                    fontSize = 12.sp,
+                                    text = if (isBioExpanded) "کم دکھائیں (Show less)" else "مزید دکھائیں (Show more)",
+                                    fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary
                                 )
@@ -211,52 +211,53 @@ fun ProfileScreen(
                                     imageVector = if (isBioExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(16.dp)
+                                    modifier = Modifier.size(14.dp)
                                 )
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(10.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
 
-                        // Crops Grown Chips
-                        Text(
-                            text = "${Strings.mainCrops(appLanguage)}:",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            farmer.mainCrops.forEach { crop ->
-                                Surface(
-                                    shape = RoundedCornerShape(12.dp),
-                                    color = MaterialTheme.colorScheme.secondaryContainer
-                                ) {
-                                    Text(
-                                        text = crop,
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                                    )
+                        // Compact Row: Crops Grown Chips & Edit Profile Button side-by-side or tightly aligned
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                farmer.mainCrops.take(3).forEach { crop ->
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = MaterialTheme.colorScheme.secondaryContainer
+                                    ) {
+                                        Text(
+                                            text = crop,
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
                                 }
                             }
-                        }
 
-                        Spacer(modifier = Modifier.height(14.dp))
-
-                        // Action Button: Edit Profile (Theme Mode button removed as requested)
-                        OutlinedButton(
-                            onClick = onEditProfileClick,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(44.dp)
-                                .testTag("edit_profile_button"),
-                            shape = RoundedCornerShape(10.dp)
-                        ) {
-                            Icon(imageVector = Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(Strings.editProfile(appLanguage), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                            // Compact Edit Profile Button
+                            OutlinedButton(
+                                onClick = onEditProfileClick,
+                                modifier = Modifier
+                                    .height(34.dp)
+                                    .testTag("edit_profile_button"),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Icon(imageVector = Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(Strings.editProfile(appLanguage), fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                            }
                         }
                     } else {
                         // Guest State Card
