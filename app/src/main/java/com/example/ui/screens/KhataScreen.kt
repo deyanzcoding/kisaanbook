@@ -37,7 +37,8 @@ fun KhataScreen(
     crops: List<FarmCrop>,
     onAddEntryClick: () -> Unit,
     onDeleteEntry: (String) -> Unit,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onCreateCropClick: () -> Unit = {}
 ) {
     var selectedCropFilter by remember { mutableStateOf("All Crops") }
     val numberFormat = remember { NumberFormat.getNumberInstance(Locale.US) }
@@ -67,7 +68,7 @@ fun KhataScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text("Zameen-dari Khata (زمین داری کھاتہ)", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                        Text("زمین داری کھاتہ", fontWeight = FontWeight.Bold, fontSize = 18.sp)
                         Text("فصلوں کا آمدن اور اخراجات کا ڈیجیٹل رجسٹر", fontSize = 11.sp, color = MaterialTheme.colorScheme.primary)
                     }
                 },
@@ -87,7 +88,7 @@ fun KhataScreen(
             ExtendedFloatingActionButton(
                 onClick = onAddEntryClick,
                 icon = { Icon(Icons.Default.Add, null) },
-                text = { Text("Add Entry (کھاتہ درج کریں)") },
+                text = { Text("کھاتہ درج کریں") },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.testTag("add_khata_fab")
@@ -120,7 +121,7 @@ fun KhataScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            Text("Net Profit / بچت یا نفع", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text("خالص نفع یا بچت", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Text(
                                 text = "PKR ${numberFormat.format(netProfit)}",
                                 fontSize = 24.sp,
@@ -160,7 +161,7 @@ fun KhataScreen(
                                         .background(Color(0xFFD32F2F))
                                 )
                                 Spacer(Modifier.width(6.dp))
-                                Text("Total Expenses (خرچہ)", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text("کل اخراجات", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                             Text(
                                 text = "PKR ${numberFormat.format(totalExpense)}",
@@ -179,7 +180,7 @@ fun KhataScreen(
                                         .background(Color(0xFF2E7D32))
                                 )
                                 Spacer(Modifier.width(6.dp))
-                                Text("Total Income (آمدن)", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text("کل آمدن", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                             Text(
                                 text = "PKR ${numberFormat.format(totalIncome)}",
@@ -192,23 +193,45 @@ fun KhataScreen(
                 }
             }
 
-            // Crop Filter Chips
+            // Crop Filter Chips + Add Crop Plus Chip
             LazyRow(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 14.dp, vertical = 2.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 items(cropFilterOptions) { option ->
                     val isSelected = option == selectedCropFilter
                     FilterChip(
                         selected = isSelected,
                         onClick = { selectedCropFilter = option },
-                        label = { Text(option) },
+                        label = { Text(if (option == "All Crops") "تمام فصلیں" else option) },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = MaterialTheme.colorScheme.primary,
                             selectedLabelColor = MaterialTheme.colorScheme.onPrimary
                         )
+                    )
+                }
+
+                // '+' icon button directly in crop row to create a new crop
+                item {
+                    AssistChip(
+                        onClick = onCreateCropClick,
+                        label = { Text("نئی فصل", fontWeight = FontWeight.Bold) },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Add Crop",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        },
+                        colors = AssistChipDefaults.assistChipColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                            labelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        ),
+                        modifier = Modifier.testTag("add_crop_in_khata_row")
                     )
                 }
             }

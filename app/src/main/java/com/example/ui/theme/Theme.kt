@@ -58,6 +58,7 @@ private val LightColorScheme =
 @Composable
 fun KisaanBookTheme(
   themeMode: ThemeMode = ThemeMode.SYSTEM,
+  isUrduOrPashto: Boolean = true,
   dynamicColor: Boolean = false,
   content: @Composable () -> Unit,
 ) {
@@ -77,7 +78,11 @@ fun KisaanBookTheme(
       else -> LightColorScheme
     }
 
-  MaterialTheme(colorScheme = colorScheme, typography = Typography, content = content)
+  MaterialTheme(
+    colorScheme = colorScheme,
+    typography = getAppTypography(isUrduOrPashto),
+    content = content
+  )
 }
 
 @Composable

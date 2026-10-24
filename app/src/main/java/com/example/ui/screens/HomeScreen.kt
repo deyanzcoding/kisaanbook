@@ -350,9 +350,9 @@ fun CompactWeatherCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        shape = RoundedCornerShape(18.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp)
     ) {
         Column(
             modifier = Modifier
@@ -369,7 +369,7 @@ fun CompactWeatherCard(
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     // Weather Icon (Sun / Half Sun / Cloud)
                     Surface(
@@ -404,7 +404,7 @@ fun CompactWeatherCard(
                             )
                         }
                         Text(
-                            text = "${district.ifBlank { "Mardan" }} • " + if (isUrdu) "فصلوں کے لیے سازگار موسم" else "Good farming conditions",
+                            text = "${district.ifBlank { "Mardan" }} • " + if (isUrdu) "فصلوں کے لیے سازگار موسم" else if (isPashto) "د فصلونو لپاره مناسب موسم" else "Good farming conditions",
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -415,7 +415,7 @@ fun CompactWeatherCard(
                     Icon(
                         imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                         contentDescription = "Toggle Forecast",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        tint = MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -428,29 +428,84 @@ fun CompactWeatherCard(
                         .padding(top = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
                     Text(
-                        text = if (isUrdu) "آنے والے دنوں کا موسم (Coming Days)" else if (isPashto) "د راتلونکو ورځو موسم" else "7-Day Weekly Forecast",
-                        style = MaterialTheme.typography.labelLarge,
+                        text = if (isUrdu) "ہفتہ وار موسمی صورتحال" else if (isPashto) "د اونۍ موسم حال" else "Weekly Weather Forecast",
+                        style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
 
+                    // Current Day Highlight Card
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.WbSunny,
+                                    contentDescription = null,
+                                    tint = Color(0xFFF57C00),
+                                    modifier = Modifier.size(22.dp)
+                                )
+                                Column {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                            text = if (isUrdu) "آج (موجودہ دن)" else if (isPashto) "نن (اوسنۍ ورځ)" else "Today (Current)",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Surface(
+                                            shape = RoundedCornerShape(6.dp),
+                                            color = MaterialTheme.colorScheme.primary
+                                        ) {
+                                            Text(
+                                                text = if (isUrdu) "موجودہ" else if (isPashto) "اوسنی" else "Now",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.onPrimary,
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                            Text(
+                                text = "24°C / 13°C",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                    }
+
                     val comingDays = listOf(
-                        ForecastDay(if (isUrdu) "کل (منگل)" else "Tomorrow", "25°C / 12°C", Icons.Default.WbSunny, Color(0xFFF57C00)),
-                        ForecastDay(if (isUrdu) "بدھ" else "Wednesday", "23°C / 13°C", Icons.Default.WbCloudy, Color(0xFF78909C)),
-                        ForecastDay(if (isUrdu) "جمعرات" else "Thursday", "22°C / 11°C", Icons.Default.CloudQueue, Color(0xFF5C6BC0)),
-                        ForecastDay(if (isUrdu) "جمعہ" else "Friday", "26°C / 14°C", Icons.Default.WbSunny, Color(0xFFF57C00)),
-                        ForecastDay(if (isUrdu) "ہفتہ" else "Saturday", "24°C / 12°C", Icons.Default.WbSunny, Color(0xFFF57C00)),
-                        ForecastDay(if (isUrdu) "اتوار" else "Sunday", "21°C / 10°C", Icons.Default.WbCloudy, Color(0xFF78909C))
+                        ForecastDay(if (isUrdu) "کل (منگل)" else if (isPashto) "سبا (نهه)" else "Tomorrow (Tue)", "25°C / 12°C", Icons.Default.WbSunny, Color(0xFFF57C00)),
+                        ForecastDay(if (isUrdu) "بدھ" else if (isPashto) "شورو" else "Wednesday", "23°C / 13°C", Icons.Default.WbCloudy, Color(0xFF78909C)),
+                        ForecastDay(if (isUrdu) "جمعرات" else if (isPashto) "زیارت" else "Thursday", "22°C / 11°C", Icons.Default.CloudQueue, Color(0xFF5C6BC0)),
+                        ForecastDay(if (isUrdu) "جمعہ" else if (isPashto) "جمعه" else "Friday", "26°C / 14°C", Icons.Default.WbSunny, Color(0xFFF57C00)),
+                        ForecastDay(if (isUrdu) "ہفتہ" else if (isPashto) "خالي" else "Saturday", "24°C / 12°C", Icons.Default.WbSunny, Color(0xFFF57C00)),
+                        ForecastDay(if (isUrdu) "اتوار" else if (isPashto) "اتوار" else "Sunday", "21°C / 10°C", Icons.Default.WbCloudy, Color(0xFF78909C))
                     )
 
                     comingDays.forEach { item ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 4.dp),
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {

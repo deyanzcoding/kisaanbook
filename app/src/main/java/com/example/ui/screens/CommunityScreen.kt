@@ -294,9 +294,9 @@ fun CommunityScreen(
             )
         }
 
-        // Author Profile Modal
+        // Author Profile Modal Bottom Sheet (opens from down side professionally)
         userProfileModal?.let { farmer ->
-            FarmerProfileDialog(
+            FarmerProfileBottomSheet(
                 farmer = farmer,
                 onDismiss = { userProfileModal = null }
             )
@@ -934,87 +934,141 @@ fun CommentItem(
 }
 
 /**
- * Farmer Profile Dialog (Instagram/Facebook style simplicity)
+ * Farmer Profile Bottom Sheet (opens professionally from down side)
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FarmerProfileDialog(
+fun FarmerProfileBottomSheet(
     farmer: Farmer,
     onDismiss: () -> Unit
 ) {
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-            modifier = Modifier.fillMaxWidth(0.95f)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
-                Surface(
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.size(64.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            text = farmer.name.take(2).uppercase(),
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = farmer.name,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        UserBadge(userType = farmer.userType)
-                    }
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        containerColor = MaterialTheme.colorScheme.surface
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 8.dp)
+                .navigationBarsPadding(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            // Avatar
+            Surface(
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.primaryContainer,
+                modifier = Modifier.size(72.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
                     Text(
-                        text = farmer.district,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        text = farmer.name.take(2).uppercase(),
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
+            }
 
-                HorizontalDivider()
-
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = farmer.name,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    UserBadge(userType = farmer.userType)
+                }
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = farmer.bio,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface
+                    text = "${farmer.district} • ${farmer.experienceYears} سالہ تجربہ",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            }
 
-                if (farmer.mainCrops.isNotEmpty()) {
+            // Stats Row: Posts, Followers, Following
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 10.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(farmer.postsCount.toString(), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text("پوسٹس", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    Box(modifier = Modifier.height(24.dp).width(1.dp).background(MaterialTheme.colorScheme.outlineVariant))
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(farmer.followersCount.toString(), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text("فالوورز", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    Box(modifier = Modifier.height(24.dp).width(1.dp).background(MaterialTheme.colorScheme.outlineVariant))
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(farmer.followingCount.toString(), fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text("فالوونگ", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+
+            // Bio
+            if (farmer.bio.isNotBlank()) {
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = MaterialTheme.colorScheme.background,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = farmer.bio,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.padding(12.dp),
+                        lineHeight = 20.sp
+                    )
+                }
+            }
+
+            if (farmer.mainCrops.isNotEmpty()) {
+                Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("اہم فصلیں و مہارت:", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("اہم فصلیں:", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                         farmer.mainCrops.forEach { crop ->
-                            SuggestionChip(onClick = {}, label = { Text(crop, fontSize = 11.sp) })
+                            SuggestionChip(
+                                onClick = {},
+                                label = { Text(crop, fontSize = 11.sp) }
+                            )
                         }
                     }
                 }
-
-                Button(
-                    onClick = onDismiss,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("بند کریں")
-                }
             }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Button(
+                onClick = onDismiss,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(46.dp),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("بند کریں", fontWeight = FontWeight.Bold)
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }

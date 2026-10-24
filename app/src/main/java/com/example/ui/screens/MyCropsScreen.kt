@@ -160,16 +160,21 @@ fun MyCropsScreen(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    Column {
+                                    Column(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .padding(end = 12.dp)
+                                    ) {
                                         Text(
                                             text = "${crop.cropName} (${crop.cropNameUrdu})",
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 18.sp,
                                             color = MaterialTheme.colorScheme.onSurface
                                         )
+                                        Spacer(Modifier.height(2.dp))
                                         Text(
-                                            text = "Variety: ${crop.variety} • ${crop.areaAcres} Acres",
-                                            fontSize = 12.sp,
+                                            text = "اقسام: ${crop.variety} • ${crop.areaAcres} ایکڑ",
+                                            fontSize = 13.sp,
                                             color = MaterialTheme.colorScheme.primary,
                                             fontWeight = FontWeight.SemiBold
                                         )
@@ -184,7 +189,7 @@ fun MyCropsScreen(
                                             fontSize = 11.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
                                         )
                                     }
                                 }
@@ -298,7 +303,8 @@ fun MyCropsScreen(
                                                 Text(
                                                     text = "${nutrient.name} (${nutrient.nameUrdu})",
                                                     fontWeight = FontWeight.Bold,
-                                                    fontSize = 13.sp
+                                                    fontSize = 13.sp,
+                                                    modifier = Modifier.weight(1f).padding(end = 8.dp)
                                                 )
                                                 Surface(
                                                     shape = RoundedCornerShape(6.dp),
@@ -309,7 +315,7 @@ fun MyCropsScreen(
                                                         fontSize = 11.sp,
                                                         fontWeight = FontWeight.Bold,
                                                         color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                                     )
                                                 }
                                             }

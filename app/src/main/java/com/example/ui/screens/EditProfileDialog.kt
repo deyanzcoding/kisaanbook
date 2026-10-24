@@ -30,19 +30,21 @@ import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import com.example.data.SampleData
 import com.example.model.Farmer
+import com.example.model.UserType
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfileDialog(
     farmer: Farmer,
     onDismiss: () -> Unit,
-    onSave: (name: String, district: String, crops: String, bio: String, avatarUri: String?) -> Unit
+    onSave: (name: String, district: String, crops: String, bio: String, avatarUri: String?, userType: UserType) -> Unit
 ) {
     var name by remember { mutableStateOf(farmer.name) }
     var district by remember { mutableStateOf(farmer.district) }
     var crops by remember { mutableStateOf(farmer.mainCrops.joinToString(", ")) }
     var bio by remember { mutableStateOf(farmer.bio) }
     var avatarUri by remember { mutableStateOf(farmer.avatarUri) }
+    var selectedUserType by remember { mutableStateOf(farmer.userType) }
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
@@ -172,6 +174,39 @@ fun EditProfileDialog(
                         }
                     }
 
+                    // Profession / Account Type Selector
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = "پیشہ یا اکاؤنٹ کی قسم (Account Profession)",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            val professions = listOf(
+                                UserType.FARMER to "کسان",
+                                UserType.DEALER to "دوکاندار",
+                                UserType.EXPERT to "زرعی ماہر"
+                            )
+                            professions.forEach { (type, label) ->
+                                FilterChip(
+                                    selected = selectedUserType == type,
+                                    onClick = { selectedUserType = type },
+                                    label = { Text(label, fontSize = 12.sp, fontWeight = FontWeight.Bold) },
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                                    ),
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
+                    }
+
                     OutlinedTextField(
                         value = crops,
                         onValueChange = { crops = it },
@@ -196,7 +231,7 @@ fun EditProfileDialog(
 
                 Button(
                     onClick = {
-                        onSave(name, district, crops, bio, avatarUri)
+                        onSave(name, district, crops, bio, avatarUri, selectedUserType)
                     },
                     enabled = name.isNotBlank(),
                     modifier = Modifier

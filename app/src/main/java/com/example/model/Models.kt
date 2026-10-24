@@ -260,7 +260,7 @@ data class MonthInfo(
 )
 
 enum class NotificationType {
-    LIKE, COMMENT, REPLY, FOLLOW, ADVISORY
+    LIKE, COMMENT, REPLY, FOLLOW, ADVISORY, SHARE, MARKET_INQUIRY
 }
 
 data class NotificationItem(
@@ -271,7 +271,8 @@ data class NotificationItem(
     val timestamp: String,
     val isRead: Boolean = false,
     val actorName: String,
-    val targetPostId: String? = null
+    val targetPostId: String? = null,
+    val category: String = "COMMUNITY" // "COMMUNITY", "MARKET", "SYSTEM"
 )
 
 data class MandiPrice(

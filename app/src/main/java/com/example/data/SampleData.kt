@@ -713,6 +713,54 @@ object SampleData {
                 horsepower = "55 HP",
                 condition = "Used - Fair"
             )
+        ),
+        MarketplaceListing(
+            id = "mkt_5",
+            title = "Nativo 75 WG (Bayer Fungicide)",
+            category = "Pesticides",
+            price = 2850,
+            unit = "100 گرام پیکٹ",
+            sellerName = "Shafiq Ahmad",
+            sellerDistrict = "Mardan, KP",
+            sellerPhone = "03001234567",
+            sellerBio = "مردان کچہری روڈ پر مجاز بائر و ایف ایم سی زرعی ڈیلر۔ کسانوں کو اصل ادویات کی فراہمی۔",
+            description = "گندم کے زرد زنگ اور چاول کے بلاسٹ کے لیے مستند بائر کمپنی کی فنجی سائیڈ، فوری اثر اور لمبی حفاظت۔",
+            imageRes = null,
+            timestamp = "2h",
+            isVerifiedSeller = true,
+            availableQuantity = "50 پیکٹس"
+        ),
+        MarketplaceListing(
+            id = "mkt_6",
+            title = "Coragen 20 SC (FMC Larvicide)",
+            category = "Pesticides",
+            price = 3400,
+            unit = "100ml بوتل",
+            sellerName = "Hasnain Raza",
+            sellerDistrict = "Gujranwala, Punjab",
+            sellerPhone = "03217654321",
+            sellerBio = "رجسٹرڈ زرعی مرکز گوجرانوالہ۔ اصلی بیج، پوٹاش اور کیڑے مار ادویات کا بااعتماد مرکز۔",
+            description = "مکئی کی لشکری سنڈی اور کماد کے بورر کے لیے اصل ایف ایم سی کوراجن، پتوں پر جذب ہو کر دیرپا کنٹرول فراہم کرے۔",
+            imageRes = null,
+            timestamp = "5h",
+            isVerifiedSeller = true,
+            availableQuantity = "35 بوتلیں"
+        ),
+        MarketplaceListing(
+            id = "mkt_7",
+            title = "SOP Sulphate of Potash (50% K2O)",
+            category = "Fertilizers",
+            price = 11800,
+            unit = "فی 50 کلو بوری",
+            sellerName = "Bashir Ahmad",
+            sellerDistrict = "Multan, Punjab",
+            sellerPhone = "03015554321",
+            sellerBio = "ملتان زرعی مرکز۔ این پی کے کھادیں اور واٹر سولیبل فرٹیلائزرز۔",
+            description = "دانوں کے وزن، چمک اور بیماریوں کے خلاف قوت مدافعت کے لیے درآمدی سلفیٹ آف پوٹاش۔",
+            imageRes = null,
+            timestamp = "1d",
+            isVerifiedSeller = true,
+            availableQuantity = "80 بوریاں"
         )
     )
 
@@ -762,32 +810,57 @@ object SampleData {
         NotificationItem(
             id = "notif_1",
             type = NotificationType.COMMENT,
-            title = "Ahmad Ali replied to your post",
-            message = "احمد علی صاحب نے آپ کی گندم کی پوسٹ پر مشورہ دیا ہے۔",
+            title = "نئی رائے موصول ہوئی",
+            message = "زرعی ماہر احمد علی نے آپ کے سوال پر مشورہ تحریر کیا ہے۔",
             timestamp = "1h ago",
             isRead = false,
             actorName = "Ahmad Ali",
-            targetPostId = "post_1"
+            targetPostId = "post_1",
+            category = "COMMUNITY"
         ),
         NotificationItem(
             id = "notif_2",
             type = NotificationType.LIKE,
-            title = "Hussain Shah liked your post",
-            message = "حسین شاہ نے آپ کی پوسٹ کو پسند کیا۔",
+            title = "پوسٹ پسند کی گئی",
+            message = "حسین شاہ نے آپ کی فصل کی پوسٹ کو پسند کیا۔",
             timestamp = "2h ago",
             isRead = false,
             actorName = "Hussain Shah",
-            targetPostId = "post_1"
+            targetPostId = "post_1",
+            category = "COMMUNITY"
         ),
         NotificationItem(
             id = "notif_3",
+            type = NotificationType.SHARE,
+            title = "پوسٹ شیئر کی گئی",
+            message = "فرمان خان نے آپ کی زرعی رپورٹ واٹس ایپ پر شیئر کی۔",
+            timestamp = "3h ago",
+            isRead = false,
+            actorName = "Farman Khan",
+            targetPostId = "post_1",
+            category = "COMMUNITY"
+        ),
+        NotificationItem(
+            id = "notif_4",
+            type = NotificationType.MARKET_INQUIRY,
+            title = "مارکیٹ رابطہ",
+            message = "ڈیلر شفیق احمد نے فخر بھکر بیج کی دستیابی کی تصدیق کی ہے۔",
+            timestamp = "4h ago",
+            isRead = true,
+            actorName = "Shafiq Ahmad",
+            targetPostId = "mkt_1",
+            category = "MARKET"
+        ),
+        NotificationItem(
+            id = "notif_5",
             type = NotificationType.ADVISORY,
-            title = "Yellow Rust Weather Advisory",
-            message = "محکمہ زراعت: گندم میں زرد زنگ سے بچاؤ کی ہدایات جاری کر دی گئی ہیں۔",
+            title = "موسمی الرٹ",
+            message = "محکمہ موسمیات: آئندہ 48 گھنٹوں میں بارش کی پیشگوئی، سپرے مؤخر کریں۔",
             timestamp = "5h ago",
             isRead = true,
-            actorName = "Zari Advisory",
-            targetPostId = null
+            actorName = "محکمہ موسمیات",
+            targetPostId = null,
+            category = "SYSTEM"
         )
     )
 

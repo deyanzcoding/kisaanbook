@@ -43,10 +43,15 @@ import com.example.model.PlantDiagnosis
 import java.io.File
 import java.io.FileOutputStream
 
+import android.content.Intent
+import androidx.compose.foundation.lazy.LazyRow
+import com.example.model.MarketplaceListing
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlantDoctorScreen(
     dealers: List<Farmer> = emptyList(),
+    listings: List<MarketplaceListing> = emptyList(),
     onBackClick: () -> Unit = {},
     onContactDealer: (Farmer) -> Unit = {}
 ) {
@@ -359,17 +364,27 @@ fun PlantDoctorScreen(
 
                         HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
 
-                        // Recommended Immediate Treatment
-                        Text("Recommended Action / طریقہ علاج:", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        // Recommended Treatment
+                        Text(
+                            text = "تجویز کردہ زرعی طریقہ علاج",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
                         Text(
                             text = result.recommendedTreatment,
                             fontSize = 13.sp,
                             color = MaterialTheme.colorScheme.onSurface,
-                            lineHeight = 19.sp
+                            lineHeight = 20.sp
                         )
 
                         // Medicines / Sprays
-                        Text("Certified Fungicide / Spray Options:", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        Text(
+                            text = "مستند فنجی سائیڈ اور زرعی ادویات",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
                         result.recommendedSprays.forEach { spray ->
                             Surface(
                                 shape = RoundedCornerShape(8.dp),
@@ -377,7 +392,7 @@ fun PlantDoctorScreen(
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Row(
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Icon(Icons.Outlined.CheckCircle, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
@@ -389,45 +404,169 @@ fun PlantDoctorScreen(
 
                         HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
 
-                        // Contact Verified Agri-Dealers to purchase medicine
-                        Text("Buy from Authorized Local Dealers:", fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                        dealers.take(2).forEach { dealer ->
-                            OutlinedCard(
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(10.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(10.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(36.dp)
-                                                .clip(CircleShape)
-                                                .background(MaterialTheme.colorScheme.primaryContainer),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Text(dealer.avatarInitials, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                                        }
-                                        Spacer(Modifier.width(10.dp))
-                                        Column {
-                                            Text(dealer.name, fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                                            Text("Dokandar · ${dealer.district}", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                        }
-                                    }
+                        // Market Dokandar Products Horizontal Row
+                        Text(
+                            text = "مارکیٹ سے دستیاب زرعی ادویات و کھادیں (دوکاندار سے رابطہ)",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
 
-                                    Button(
-                                        onClick = { onContactDealer(dealer) },
-                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                                        shape = RoundedCornerShape(8.dp)
+                        val marketMedicines = remember(listings) {
+                            val items = listings.filter {
+                                it.category.equals("Pesticides", ignoreCase = true) ||
+                                it.category.equals("Fertilizers", ignoreCase = true)
+                            }
+                            if (items.isNotEmpty()) items else listOf(
+                                MarketplaceListing(
+                                    id = "temp_1",
+                                    title = "Nativo 75 WG (Fungicide)",
+                                    category = "Pesticides",
+                                    price = 2850,
+                                    unit = "100g",
+                                    sellerName = "Shafiq Ahmad",
+                                    sellerDistrict = "Mardan",
+                                    sellerPhone = "03001234567",
+                                    sellerBio = "مجاز زرعی مرکز",
+                                    description = "گندم کے زنگ کا موثر علاج",
+                                    imageRes = null,
+                                    timestamp = "Now",
+                                    isVerifiedSeller = true,
+                                    availableQuantity = "Available"
+                                ),
+                                MarketplaceListing(
+                                    id = "temp_2",
+                                    title = "Coragen 20 SC (Larvicide)",
+                                    category = "Pesticides",
+                                    price = 3400,
+                                    unit = "100ml",
+                                    sellerName = "Hasnain Raza",
+                                    sellerDistrict = "Gujranwala",
+                                    sellerPhone = "03217654321",
+                                    sellerBio = "اصلی ادویات کا مرکز",
+                                    description = "لشکری سنڈی کا خاتمہ",
+                                    imageRes = null,
+                                    timestamp = "Now",
+                                    isVerifiedSeller = true,
+                                    availableQuantity = "Available"
+                                ),
+                                MarketplaceListing(
+                                    id = "temp_3",
+                                    title = "SOP Sulphate of Potash",
+                                    category = "Fertilizers",
+                                    price = 11800,
+                                    unit = "50kg",
+                                    sellerName = "Bashir Ahmad",
+                                    sellerDistrict = "Multan",
+                                    sellerPhone = "03015554321",
+                                    sellerBio = "کھاد و منرلز ڈیلر",
+                                    description = "دانوں کا وزن اور قوت مدافعت",
+                                    imageRes = null,
+                                    timestamp = "Now",
+                                    isVerifiedSeller = true,
+                                    availableQuantity = "Available"
+                                )
+                            )
+                        }
+
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            items(marketMedicines.size) { index ->
+                                val item = marketMedicines[index]
+                                OutlinedCard(
+                                    shape = RoundedCornerShape(12.dp),
+                                    modifier = Modifier.width(220.dp)
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(10.dp),
+                                        verticalArrangement = Arrangement.spacedBy(6.dp)
                                     ) {
-                                        Icon(Icons.Default.Phone, null, Modifier.size(14.dp))
-                                        Spacer(Modifier.width(4.dp))
-                                        Text("Contact", fontSize = 11.sp)
+                                        Surface(
+                                            shape = RoundedCornerShape(6.dp),
+                                            color = MaterialTheme.colorScheme.secondaryContainer
+                                        ) {
+                                            Text(
+                                                text = item.category,
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            )
+                                        }
+
+                                        Text(
+                                            text = item.title,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 13.sp,
+                                            maxLines = 1,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+
+                                        Text(
+                                            text = "Rs. ${item.price} / ${item.unit}",
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(
+                                                imageVector = Icons.Default.Storefront,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier = Modifier.size(13.dp)
+                                            )
+                                            Spacer(Modifier.width(4.dp))
+                                            Text(
+                                                text = "${item.sellerName} (${item.sellerDistrict})",
+                                                fontSize = 10.sp,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                maxLines = 1
+                                            )
+                                        }
+
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                        ) {
+                                            // Call button
+                                            Button(
+                                                onClick = {
+                                                    val cleanNumber = item.sellerPhone.replace(Regex("[^0-9+]"), "")
+                                                    val dialIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$cleanNumber"))
+                                                    context.startActivity(dialIntent)
+                                                },
+                                                shape = RoundedCornerShape(8.dp),
+                                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp),
+                                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                                                modifier = Modifier.weight(1f).height(34.dp)
+                                            ) {
+                                                Icon(Icons.Default.Call, contentDescription = "Call", modifier = Modifier.size(13.dp))
+                                                Spacer(Modifier.width(2.dp))
+                                                Text("کال", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                            }
+
+                                            // WhatsApp button
+                                            Button(
+                                                onClick = {
+                                                    val cleanNumber = item.sellerPhone.replace(Regex("[^0-9]"), "")
+                                                    val formattedNumber = if (cleanNumber.startsWith("0")) "92" + cleanNumber.substring(1) else cleanNumber
+                                                    val msg = Uri.encode("السلام علیکم، کسان بک پر میں نے ${item.title} کا اشتہار دیکھا ہے، کیا یہ دستیاب ہے؟")
+                                                    val waIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/$formattedNumber?text=$msg"))
+                                                    context.startActivity(waIntent)
+                                                },
+                                                shape = RoundedCornerShape(8.dp),
+                                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp),
+                                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366)),
+                                                modifier = Modifier.weight(1f).height(34.dp)
+                                            ) {
+                                                Icon(Icons.Default.Chat, contentDescription = "WhatsApp", modifier = Modifier.size(13.dp), tint = Color.White)
+                                                Spacer(Modifier.width(2.dp))
+                                                Text("واٹس ایپ", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                            }
+                                        }
                                     }
                                 }
                             }

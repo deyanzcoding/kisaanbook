@@ -1,5 +1,7 @@
 package com.example.ui.components
 
+import android.Manifest
+import android.graphics.Bitmap
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -8,7 +10,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -27,17 +28,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
-import com.example.R
 import com.example.model.CommunityPost
 import com.example.model.Farmer
 import kotlinx.coroutines.delay
+import java.io.File
+import java.io.FileOutputStream
 import java.util.UUID
 
 enum class RecordingState {
@@ -54,7 +55,6 @@ fun CreateCommunityPostDialog(
     val context = LocalContext.current
     var postText by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("Farmer problems") }
-    var selectedImageRes by remember { mutableStateOf<Int?>(null) }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
     // Voice recording states
@@ -72,20 +72,46 @@ fun CreateCommunityPostDialog(
         }
     }
 
-    // Photo picker
+    fun saveBitmapToCache(bitmap: Bitmap): Uri? {
+        return try {
+            val file = File(context.cacheDir, "crop_post_${System.currentTimeMillis()}.jpg")
+            FileOutputStream(file).use { out ->
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
+            }
+            Uri.fromFile(file)
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicturePreview()
+    ) { bitmap ->
+        if (bitmap != null) {
+            val uri = saveBitmapToCache(bitmap)
+            if (uri != null) {
+                selectedImageUri = uri
+            }
+        }
+    }
+
+    val cameraPermission = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            cameraLauncher.launch(null)
+        } else {
+            Toast.makeText(context, "تصویر بنانے کے لیے کیمرہ کی اجازت درکار ہے", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri: Uri? ->
         if (uri != null) {
             selectedImageUri = uri
-            selectedImageRes = null
         }
     }
-
-    val sampleDrawables = listOf(
-        R.drawable.img_wheat_field to "Wheat Field",
-        R.drawable.img_maize_harvest to "Maize Harvest"
-    )
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -94,16 +120,16 @@ fun CreateCommunityPostDialog(
         Card(
             modifier = Modifier
                 .fillMaxWidth(0.95f)
-                .fillMaxHeight(0.90f)
+                .fillMaxHeight(0.92f)
                 .padding(8.dp),
-            shape = RoundedCornerShape(24.dp),
+            shape = RoundedCornerShape(22.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(20.dp)
+                    .padding(18.dp)
             ) {
                 // Header
                 Row(
@@ -119,7 +145,7 @@ fun CreateCommunityPostDialog(
                             color = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            text = "آواز، تحریر یا تصویر کے ذریعے برادری سے رابطہ کریں",
+                            text = "آواز، تحریر یا تصویر کے ذریعے کسان بھائیوں سے رابطہ کریں",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -129,14 +155,14 @@ fun CreateCommunityPostDialog(
                     }
                 }
 
-                HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp))
 
                 // Scrollable Body
                 Column(
                     modifier = Modifier
                         .weight(1f)
                         .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     // Category Selector
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -160,7 +186,11 @@ fun CreateCommunityPostDialog(
                                     selected = isSelected,
                                     onClick = { selectedCategory = cat },
                                     label = { Text(displayCat) },
-                                    shape = RoundedCornerShape(8.dp)
+                                    shape = RoundedCornerShape(8.dp),
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                                    )
                                 )
                             }
                         }
@@ -172,24 +202,24 @@ fun CreateCommunityPostDialog(
                         onValueChange = { postText = it },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(min = 100.dp, max = 160.dp),
-                        label = { Text("اپنا مسئلہ یا مشورہ یہاں لکھیں (اختیاری)...") },
+                            .heightIn(min = 100.dp, max = 150.dp),
+                        label = { Text("اپنا مسئلہ، فصل کا حال یا مشورہ تحریر کریں...") },
                         shape = RoundedCornerShape(14.dp)
                     )
 
-                    // Prominent Voice Recorder Section
+                    // Redesigned Voice Attachment Section (Simple & Elegant with Best Style & Padding)
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
+                        shape = RoundedCornerShape(14.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = if (recordingState == RecordingState.RECORDING) Color(0xFFFFEBEE) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                            containerColor = if (recordingState == RecordingState.RECORDING) Color(0xFFFFEBEE)
+                            else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                         )
                     ) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
+                                .padding(14.dp),
                             verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
                             Row(
@@ -204,22 +234,29 @@ fun CreateCommunityPostDialog(
                                     Icon(
                                         imageVector = Icons.Default.Mic,
                                         contentDescription = null,
-                                        tint = if (recordingState == RecordingState.RECORDING) Color(0xFFC62828) else MaterialTheme.colorScheme.primary
+                                        tint = if (recordingState == RecordingState.RECORDING) Color(0xFFC62828) else MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(20.dp)
                                     )
                                     Text(
-                                        text = "آواز کا پیغام (Voice Note)",
+                                        text = "صوتی ریکارڈنگ",
                                         style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.Bold
                                     )
                                 }
 
                                 if (recordingSeconds > 0) {
-                                    Text(
-                                        text = String.format("%02d:%02d", recordingSeconds / 60, recordingSeconds % 60),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold,
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
                                         color = if (recordingState == RecordingState.RECORDING) Color(0xFFC62828) else MaterialTheme.colorScheme.primary
-                                    )
+                                    ) {
+                                        Text(
+                                            text = String.format("%02d:%02d", recordingSeconds / 60, recordingSeconds % 60),
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                        )
+                                    }
                                 }
                             }
 
@@ -234,27 +271,30 @@ fun CreateCommunityPostDialog(
                                         colors = ButtonDefaults.buttonColors(
                                             containerColor = MaterialTheme.colorScheme.primary
                                         ),
-                                        shape = RoundedCornerShape(12.dp)
+                                        shape = RoundedCornerShape(10.dp),
+                                        modifier = Modifier.fillMaxWidth().height(44.dp)
                                     ) {
-                                        Icon(Icons.Default.Mic, contentDescription = null)
+                                        Icon(Icons.Default.Mic, contentDescription = null, Modifier.size(18.dp))
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Text("آواز ریکارڈ کریں (Record Voice)", fontWeight = FontWeight.Bold)
+                                        Text("آواز ریکارڈ کریں", fontWeight = FontWeight.Bold)
                                     }
                                 }
 
                                 RecordingState.RECORDING -> {
                                     Row(
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Button(
                                             onClick = { recordingState = RecordingState.PAUSED },
                                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF57C00)),
-                                            shape = RoundedCornerShape(12.dp)
+                                            shape = RoundedCornerShape(10.dp),
+                                            modifier = Modifier.weight(1f).height(44.dp)
                                         ) {
-                                            Icon(Icons.Default.Pause, contentDescription = null)
+                                            Icon(Icons.Default.Pause, contentDescription = null, Modifier.size(16.dp))
                                             Spacer(modifier = Modifier.width(6.dp))
-                                            Text("وقفہ (Pause)")
+                                            Text("وقفہ")
                                         }
 
                                         Button(
@@ -263,28 +303,31 @@ fun CreateCommunityPostDialog(
                                                 hasVoiceNote = true
                                             },
                                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32)),
-                                            shape = RoundedCornerShape(12.dp)
+                                            shape = RoundedCornerShape(10.dp),
+                                            modifier = Modifier.weight(1f).height(44.dp)
                                         ) {
-                                            Icon(Icons.Default.Check, contentDescription = null)
+                                            Icon(Icons.Default.Check, contentDescription = null, Modifier.size(16.dp))
                                             Spacer(modifier = Modifier.width(6.dp))
-                                            Text("مکمل (Done)")
+                                            Text("مکمل")
                                         }
                                     }
                                 }
 
                                 RecordingState.PAUSED -> {
                                     Row(
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Button(
                                             onClick = { recordingState = RecordingState.RECORDING },
                                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                                            shape = RoundedCornerShape(12.dp)
+                                            shape = RoundedCornerShape(10.dp),
+                                            modifier = Modifier.weight(1f).height(44.dp)
                                         ) {
-                                            Icon(Icons.Default.PlayArrow, contentDescription = null)
+                                            Icon(Icons.Default.PlayArrow, contentDescription = null, Modifier.size(16.dp))
                                             Spacer(modifier = Modifier.width(6.dp))
-                                            Text("جاری رکھیں (Resume)")
+                                            Text("جاری رکھیں")
                                         }
 
                                         Button(
@@ -293,9 +336,10 @@ fun CreateCommunityPostDialog(
                                                 hasVoiceNote = true
                                             },
                                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32)),
-                                            shape = RoundedCornerShape(12.dp)
+                                            shape = RoundedCornerShape(10.dp),
+                                            modifier = Modifier.weight(1f).height(44.dp)
                                         ) {
-                                            Icon(Icons.Default.Check, contentDescription = null)
+                                            Icon(Icons.Default.Check, contentDescription = null, Modifier.size(16.dp))
                                             Spacer(modifier = Modifier.width(6.dp))
                                             Text("محفوظ کریں")
                                         }
@@ -344,62 +388,61 @@ fun CreateCommunityPostDialog(
                         }
                     }
 
-                    // Picture Attachment Section (Compact 200dp Container)
+                    // Picture Attachment Section (Only Camera & Gallery - No sample demo pictures)
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = "تصویر شامل کریں",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            Text(
-                                text = "تصویر منسلک کریں (Picture)",
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold
-                            )
+                            OutlinedButton(
+                                onClick = { cameraPermission.launch(Manifest.permission.CAMERA) },
+                                shape = RoundedCornerShape(10.dp),
+                                modifier = Modifier.weight(1f).height(44.dp)
+                            ) {
+                                Icon(Icons.Default.PhotoCamera, null, Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("کیمرہ", fontWeight = FontWeight.Bold)
+                            }
 
-                            TextButton(
+                            OutlinedButton(
                                 onClick = {
                                     photoPickerLauncher.launch(
                                         PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                                     )
-                                }
+                                },
+                                shape = RoundedCornerShape(10.dp),
+                                modifier = Modifier.weight(1f).height(44.dp)
                             ) {
-                                Icon(Icons.Default.PhotoLibrary, contentDescription = null, modifier = Modifier.size(18.dp))
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("گیلری کھولیں")
+                                Icon(Icons.Default.PhotoLibrary, null, Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("گیلری", fontWeight = FontWeight.Bold)
                             }
                         }
 
                         // Preview Container
-                        if (selectedImageUri != null || selectedImageRes != null) {
+                        if (selectedImageUri != null) {
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(200.dp)
+                                    .height(180.dp)
                                     .clip(RoundedCornerShape(12.dp))
                                     .background(Color.Black.copy(alpha = 0.05f))
                             ) {
-                                if (selectedImageUri != null) {
-                                    AsyncImage(
-                                        model = selectedImageUri,
-                                        contentDescription = "Selected Picture",
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                } else if (selectedImageRes != null) {
-                                    Image(
-                                        painter = painterResource(id = selectedImageRes!!),
-                                        contentDescription = "Selected Preset",
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                }
+                                AsyncImage(
+                                    model = selectedImageUri,
+                                    contentDescription = "Selected Picture",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
 
                                 IconButton(
-                                    onClick = {
-                                        selectedImageUri = null
-                                        selectedImageRes = null
-                                    },
+                                    onClick = { selectedImageUri = null },
                                     modifier = Modifier
                                         .align(Alignment.TopEnd)
                                         .padding(8.dp)
@@ -414,101 +457,43 @@ fun CreateCommunityPostDialog(
                                     )
                                 }
                             }
-                        } else {
-                            // Quick Preset Selector
-                            Text(
-                                text = "یا ذیل میں سے نمونہ تصویر منتخب کریں:",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                                items(sampleDrawables) { (drawableRes, label) ->
-                                    Card(
-                                        modifier = Modifier
-                                            .size(width = 120.dp, height = 75.dp)
-                                            .clip(RoundedCornerShape(10.dp))
-                                            .clickable {
-                                                selectedImageRes = drawableRes
-                                                selectedImageUri = null
-                                            },
-                                        shape = RoundedCornerShape(10.dp)
-                                    ) {
-                                        Box(modifier = Modifier.fillMaxSize()) {
-                                            Image(
-                                                painter = painterResource(id = drawableRes),
-                                                contentDescription = label,
-                                                modifier = Modifier.fillMaxSize(),
-                                                contentScale = ContentScale.Crop
-                                            )
-                                            Surface(
-                                                color = Color.Black.copy(alpha = 0.5f),
-                                                modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth()
-                                            ) {
-                                                Text(
-                                                    text = label,
-                                                    fontSize = 10.sp,
-                                                    color = Color.White,
-                                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
                         }
                     }
                 }
 
-                HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
-                // Bottom Action Buttons
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                // Submit Button
+                val canSubmit = postText.isNotBlank() || hasVoiceNote || selectedImageUri != null
+                Button(
+                    onClick = {
+                        val newPost = CommunityPost(
+                            id = "post_${UUID.randomUUID()}",
+                            author = currentUser,
+                            text = postText.trim(),
+                            voiceUri = if (hasVoiceNote) "sample_voice_uri" else null,
+                            voiceDurationSeconds = if (hasVoiceNote) recordingSeconds else 0,
+                            imageRes = null,
+                            imageUri = selectedImageUri?.toString(),
+                            category = selectedCategory,
+                            district = currentUser.district.split(",").firstOrNull()?.trim() ?: "Mardan",
+                            timestamp = "ابھی",
+                            likeCount = 0,
+                            isLiked = false,
+                            comments = emptyList()
+                        )
+                        onSubmitPost(newPost)
+                        onDismiss()
+                    },
+                    enabled = canSubmit,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
-                    OutlinedButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text("منسوخ")
-                    }
-
-                    val canSubmit = postText.isNotBlank() || hasVoiceNote || selectedImageUri != null || selectedImageRes != null
-
-                    Button(
-                        onClick = {
-                            if (canSubmit) {
-                                val newPost = CommunityPost(
-                                    id = "comm_${UUID.randomUUID()}",
-                                    author = currentUser,
-                                    text = postText.trim(),
-                                    voiceUri = if (hasVoiceNote) "recorded_voice_${System.currentTimeMillis()}" else null,
-                                    voiceDurationSeconds = if (hasVoiceNote) recordingSeconds else 0,
-                                    imageRes = selectedImageRes,
-                                    imageUri = selectedImageUri?.toString(),
-                                    category = selectedCategory,
-                                    district = currentUser.district,
-                                    timestamp = "Just now",
-                                    likeCount = 0,
-                                    isLiked = false,
-                                    comments = emptyList()
-                                )
-                                onSubmitPost(newPost)
-                                Toast.makeText(context, "پوسٹ شائع ہو گئی ہے!", Toast.LENGTH_SHORT).show()
-                            }
-                        },
-                        enabled = canSubmit,
-                        modifier = Modifier.weight(1.5f),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(Icons.Default.Send, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("پوسٹ شائع کریں", fontWeight = FontWeight.Bold)
-                    }
+                    Icon(imageVector = Icons.Default.Send, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("پوسٹ شائع کریں", fontWeight = FontWeight.Bold, fontSize = 15.sp)
                 }
             }
         }

@@ -705,7 +705,14 @@ class KisaanBhaiViewModel : ViewModel() {
     }
 
     // Profile Actions
-    fun updateProfile(name: String, district: String, cropsStr: String, bio: String, avatarUri: String? = null) {
+    fun updateProfile(
+        name: String,
+        district: String,
+        cropsStr: String,
+        bio: String,
+        avatarUri: String? = null,
+        userType: UserType = UserType.FARMER
+    ) {
         val crops = cropsStr.split(",").map { it.trim() }.filter { it.isNotEmpty() }
         _currentUser.update {
             it.copy(
@@ -713,7 +720,9 @@ class KisaanBhaiViewModel : ViewModel() {
                 district = district.trim(),
                 mainCrops = crops.ifEmpty { listOf("Wheat", "Maize") },
                 bio = bio.trim(),
-                avatarUri = avatarUri ?: it.avatarUri
+                avatarUri = avatarUri ?: it.avatarUri,
+                userType = userType,
+                isExpert = (userType == UserType.EXPERT)
             )
         }
         _showEditProfileDialog.value = false

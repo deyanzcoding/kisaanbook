@@ -22,11 +22,14 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.R
 import com.example.data.SampleData
+import com.example.localization.AppLanguage
 import com.example.localization.Strings
 import com.example.ui.components.*
 import com.example.ui.screens.*
@@ -98,13 +101,20 @@ fun KisaanBhaiApp(
         }
     }
 
-    KisaanBookTheme(themeMode = themeMode) {
-        Scaffold(
-            bottomBar = {
-                NavigationBar(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    tonalElevation = 6.dp
-                ) {
+    val isUrduOrPashto = appLanguage == AppLanguage.URDU || appLanguage == AppLanguage.PASHTO
+    val layoutDirection = if (isUrduOrPashto) LayoutDirection.Ltr else LayoutDirection.Rtl
+
+    KisaanBookTheme(
+        themeMode = themeMode,
+        isUrduOrPashto = isUrduOrPashto
+    ) {
+        CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
+            Scaffold(
+                bottomBar = {
+                    NavigationBar(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        tonalElevation = 6.dp
+                    ) {
                     // Home (Farmer Utility Hub)
                     NavigationBarItem(
                         selected = currentTab == AppTab.HOME,
@@ -215,6 +225,7 @@ fun KisaanBhaiApp(
                                 }
                                 HomeSubScreen.PLANT_DOCTOR -> {
                                     PlantDoctorScreen(
+                                        listings = listings,
                                         onBackClick = { viewModel.setHomeSubScreen(HomeSubScreen.HOME_MAIN) }
                                     )
                                 }
@@ -231,7 +242,8 @@ fun KisaanBhaiApp(
                                         crops = farmCrops,
                                         onAddEntryClick = { viewModel.openAddKhataDialog() },
                                         onDeleteEntry = { viewModel.deleteKhataEntry(it) },
-                                        onBackClick = { viewModel.setHomeSubScreen(HomeSubScreen.HOME_MAIN) }
+                                        onBackClick = { viewModel.setHomeSubScreen(HomeSubScreen.HOME_MAIN) },
+                                        onCreateCropClick = { viewModel.openCreateCropDialog() }
                                     )
                                 }
                                 HomeSubScreen.CALENDAR -> {
@@ -414,8 +426,8 @@ fun KisaanBhaiApp(
             EditProfileDialog(
                 farmer = currentUser,
                 onDismiss = { viewModel.closeEditProfile() },
-                onSave = { name, dist, crops, bio, avatarUri ->
-                    viewModel.updateProfile(name, dist, crops, bio, avatarUri)
+                onSave = { name, dist, crops, bio, avatarUri, userType ->
+                    viewModel.updateProfile(name, dist, crops, bio, avatarUri, userType)
                 }
             )
         }
@@ -499,6 +511,7 @@ fun KisaanBhaiApp(
                     }
                 }
             }
+        }
         }
     }
 }
