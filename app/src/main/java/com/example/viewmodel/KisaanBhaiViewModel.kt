@@ -5,6 +5,7 @@ import com.example.data.SampleData
 import com.example.localization.AppLanguage
 import com.example.model.*
 import com.example.ui.theme.ThemeMode
+import com.example.util.DateTimeUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -670,7 +671,7 @@ class KisaanBhaiViewModel : ViewModel() {
             priceMin = priceMin,
             priceMax = priceMax,
             unit = unit.trim(),
-            dateUpdated = "Updated Today by Farmer"
+            dateUpdated = DateTimeUtils.getUpdatedTodayText()
         )
 
         _mandiPrices.update { current ->
